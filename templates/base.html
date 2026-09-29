@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Public Alert{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="barra">
+    <a class="marca" href="{{ url_for('inicio') }}">Public Alert</a>
+    {% if current_user.is_authenticated %}
+    <nav>
+      <a href="{{ url_for('mapa') }}">Mapa</a>
+      <a href="{{ url_for('reportar') }}">Reportar</a>
+      <a href="{{ url_for('logout') }}">Salir ({{ current_user.nombre }})</a>
+    </nav>
+    {% endif %}
+  </header>
+  <main class="contenedor">
+    {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+      <p class="aviso {{ categoria }}" role="alert">{{ mensaje }}</p>
+    {% endfor %}
+    {% block contenido %}{% endblock %}
+  </main>
+</body>
+</html>

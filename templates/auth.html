@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titulo %}{{ 'Crear cuenta' if modo == 'registro' else 'Iniciar sesión' }} · Public Alert{% endblock %}
+{% block contenido %}
+<section class="tarjeta estrecha">
+  <h1>{{ 'Crea tu cuenta' if modo == 'registro' else 'Bienvenido a Public Alert' }}</h1>
+  <p class="sub">Reporta baches, alumbrado dañado, basura, obras y zonas de riesgo en tu ciudad.</p>
+  <form method="post">
+    {% if modo == 'registro' %}
+    <label>Nombre<input name="nombre" required autocomplete="name"></label>
+    {% endif %}
+    <label>Correo electrónico<input type="email" name="email" required autocomplete="email"></label>
+    <label>Contraseña<input type="password" name="password" required minlength="{{ 8 if modo == 'registro' else 1 }}" autocomplete="{{ 'new-password' if modo == 'registro' else 'current-password' }}"></label>
+    <button class="btn" type="submit">{{ 'Crear cuenta' if modo == 'registro' else 'Iniciar sesión' }}</button>
+  </form>
+  <p class="sub">
+    {% if modo == 'registro' %}¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a>
+    {% else %}¿Eres nuevo? <a href="{{ url_for('registro') }}">Crea tu cuenta</a>{% endif %}
+  </p>
+</section>
+{% endblock %}

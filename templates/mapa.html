@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titulo %}Mapa de reportes · Public Alert{% endblock %}
+{% block contenido %}
+<div class="fila-titulo">
+  <h1>Alertas reportadas <span class="contador">{{ reportes|length }}</span></h1>
+  <a class="btn" href="{{ url_for('reportar') }}">Reportar un problema</a>
+</div>
+<form class="filtros" method="get">
+  <label>Categoría
+    <select name="categoria">
+      <option value="">Todas</option>
+      {% for c in categorias %}<option {{ 'selected' if c == f_categoria }}>{{ c }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Estado
+    <select name="estado">
+      <option value="">Todos</option>
+      {% for e in estados %}<option {{ 'selected' if e == f_estado }}>{{ e }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="btn secundario" type="submit">Filtrar</button>
+</form>
+<div class="mapa">{{ mapa|safe }}</div>
+{% if not reportes %}
+  <p class="vacio">No se encontraron reportes con estos filtros. Prueba con otra categoría o crea el primer reporte.</p>
+{% else %}
+<ul class="lista">
+  {% for r in reportes %}
+  <li><a href="{{ url_for('detalle', id=r.id) }}">
+    <img src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
+    <div><strong>{{ r.categoria }}</strong> <span class="estado">{{ r.estado }}</span>
+    <p>{{ r.descripcion[:90] }}</p><small>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</small></div>
+  </a></li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

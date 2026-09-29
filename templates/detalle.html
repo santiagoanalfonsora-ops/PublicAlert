@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}{{ r.categoria }} · Public Alert{% endblock %}
+{% block contenido %}
+<section class="tarjeta">
+  <a href="{{ url_for('mapa') }}">Volver al mapa</a>
+  <h1>{{ r.categoria }} <span class="estado">{{ r.estado }}</span></h1>
+  <img class="foto" src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
+  <p>{{ r.descripcion }}</p>
+  <dl>
+    <dt>Fecha</dt><dd>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</dd>
+    <dt>Reportado por</dt><dd>{{ r.autor.nombre }}</dd>
+    <dt>Ubicación</dt><dd>{{ '%.5f'|format(r.latitud) }}, {{ '%.5f'|format(r.longitud) }}
+      · <a href="https://www.openstreetmap.org/?mlat={{ r.latitud }}&mlon={{ r.longitud }}#map=18/{{ r.latitud }}/{{ r.longitud }}" target="_blank" rel="noopener">Ver en OpenStreetMap</a></dd>
+  </dl>
+</section>
+{% endblock %}
