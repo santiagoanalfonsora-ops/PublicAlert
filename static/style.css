@@ -36,6 +36,7 @@ input,select,textarea{display:block;width:100%;margin-top:.3rem;padding:.6rem;bo
 .gps{background:var(--fondo);padding:.6rem;border-radius:6px;font-size:.9rem}
 dl{display:grid;grid-template-columns:max-content 1fr;gap:.3rem 1rem}
 dt{font-weight:700}dd{margin:0}
+<<<<<<< HEAD
 
 /* ---------- Calificación por estrellas ---------- */
 .estrellas{font-size:1.5rem;color:var(--senal);letter-spacing:.1rem;margin:.4rem 0}
@@ -45,3 +46,5 @@ dt{font-weight:700}dd{margin:0}
 .estrellas-input label{font-size:2.2rem;line-height:1;color:#b8c0d0;cursor:pointer;margin:0;font-weight:400}
 .estrellas-input input:checked ~ label,.estrellas-input label:hover,.estrellas-input label:hover ~ label{color:var(--senal)}
 .estrellas-input input:focus-visible + label{outline:3px solid var(--senal)}
+=======
+>>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73

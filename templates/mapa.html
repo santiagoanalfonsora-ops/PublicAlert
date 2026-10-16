@@ -29,6 +29,7 @@
   <li><a href="{{ url_for('detalle', id=r.id) }}">
     <img src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
     <div><strong>{{ r.categoria }}</strong> <span class="estado">{{ r.estado }}</span>
+<<<<<<< HEAD
     <p>{{ r.descripcion[:90] }}</p>
     <small>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
     <p>
@@ -39,6 +40,9 @@
         <span class="sub">Sin calificaciones</span>
       {% endif %}
     </p></div>
+=======
+    <p>{{ r.descripcion[:90] }}</p><small>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</small></div>
+>>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73
   </a></li>
   {% endfor %}
 </ul>

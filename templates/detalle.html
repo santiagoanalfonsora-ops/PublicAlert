@@ -12,6 +12,7 @@
     <dt>Ubicación</dt><dd>{{ '%.5f'|format(r.latitud) }}, {{ '%.5f'|format(r.longitud) }}
       · <a href="https://www.openstreetmap.org/?mlat={{ r.latitud }}&mlon={{ r.longitud }}#map=18/{{ r.latitud }}/{{ r.longitud }}" target="_blank" rel="noopener">Ver en OpenStreetMap</a></dd>
   </dl>
+<<<<<<< HEAD
   {% if r.calificaciones %}
     {% set prom = r.promedio %}
     <p class="estrellas" aria-label="Promedio {{ '%.1f'|format(prom) }} de 5">{{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}</p>
@@ -37,3 +38,7 @@
   {% endif %}
 </section>
 {% endblock %}
+=======
+</section>
+{% endblock %}
+>>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73
