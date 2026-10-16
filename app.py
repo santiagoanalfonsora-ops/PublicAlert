@@ -1,13 +1,14 @@
 import os
 import uuid
 import folium
+from sqlalchemy import func
 from markupsafe import escape
 from flask import (Flask, render_template, request, redirect, url_for,
                    flash, abort)
 from flask_login import (LoginManager, login_user, logout_user,
                          login_required, current_user)
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Usuario, Reporte, CATEGORIAS, ESTADOS, COLORES
+from models import db, Usuario, Reporte, Calificacion, CATEGORIAS, ESTADOS, COLORES
 
 BASE = os.path.abspath(os.path.dirname(__file__))
 EXTENSIONES = {"png", "jpg", "jpeg", "webp"}
@@ -148,7 +149,69 @@ def reportar():
 @login_required
 def detalle(id):
     reporte = db.session.get(Reporte, id) or abort(404)
-    return render_template("detalle.html", r=reporte)
+    mia = Calificacion.query.filter_by(reporte_id=id, usuario_id=current_user.id).first()
+    return render_template("detalle.html", r=reporte, mia=mia)
+
+
+# ---------- Calificación de 1 a 5 estrellas (cualquier usuario, 1 voto por reporte) ----------
+@app.route("/reporte/<int:id>/calificar", methods=["POST"])
+@login_required
+def calificar(id):
+    reporte = db.session.get(Reporte, id) or abort(404)
+    try:
+        estrellas = int(request.form.get("estrellas", ""))
+    except ValueError:
+        estrellas = 0
+    if reporte.estado != "Atendido":
+        flash("Solo puedes calificar cuando el reporte esté atendido.", "error")
+    elif not 1 <= estrellas <= 5:
+        flash("Selecciona entre 1 y 5 estrellas.", "error")
+    else:
+        voto = Calificacion.query.filter_by(reporte_id=id, usuario_id=current_user.id).first()
+        if voto:  # si ya había calificado, se actualiza su voto
+            voto.estrellas = estrellas
+            flash("Actualizamos tu calificación.", "ok")
+        else:
+            db.session.add(Calificacion(reporte_id=id, usuario_id=current_user.id, estrellas=estrellas))
+            flash("¡Gracias por tu calificación!", "ok")
+        db.session.commit()
+    return redirect(url_for("detalle", id=id))
+
+
+# ---------- Tablero kanban de reportes (solo administrador = primer usuario registrado) ----------
+def es_admin():
+    return current_user.is_authenticated and current_user.id == 1
+
+
+@app.context_processor
+def inyectar_admin():
+    return {"es_admin": es_admin()}
+
+
+@app.route("/kanban")
+@login_required
+def kanban():
+    if not es_admin():
+        abort(403)
+    columnas = {e: Reporte.query.filter_by(estado=e).order_by(Reporte.fecha.desc()).all()
+                for e in ESTADOS}
+    promedio = db.session.query(func.avg(Calificacion.estrellas)).scalar()
+    total = Calificacion.query.count()
+    return render_template("kanban.html", columnas=columnas, estados=ESTADOS,
+                           promedio=promedio, total=total)
+
+
+@app.route("/reporte/<int:id>/estado", methods=["POST"])
+@login_required
+def cambiar_estado(id):
+    if not es_admin():
+        abort(403)
+    reporte = db.session.get(Reporte, id) or abort(404)
+    nuevo = request.form.get("estado")
+    if nuevo in ESTADOS:
+        reporte.estado = nuevo
+        db.session.commit()
+    return redirect(url_for("kanban"))
 
 
 @app.errorhandler(413)

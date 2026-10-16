@@ -36,19 +36,20 @@
 {% else %}
 <ul class="lista">
   {% for r in reportes %}
-  <li>
-    <a href="{{ url_for('detalle', id=r.id) }}" class="tarjeta-reporte">
-      <img src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
-      <div class="info-reporte">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-          <strong>{{ r.categoria }}</strong> 
-          <span class="estado">{{ r.estado }}</span>
-        </div>
-        <p class="desc-corta">{{ r.descripcion[:90] }}...</p>
-        <small class="fecha-corta">{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
-      </div>
-    </a>
-  </li>
+  <li><a href="{{ url_for('detalle', id=r.id) }}">
+    <img src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
+    <div><strong>{{ r.categoria }}</strong> <span class="estado">{{ r.estado }}</span>
+    <p>{{ r.descripcion[:90] }}</p>
+    <small>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
+    <p>
+      {% if r.calificaciones %}
+        <span class="nota-estrellas">{{ '★' * (r.promedio|round|int) }}{{ '☆' * (5 - (r.promedio|round|int)) }}</span>
+        {{ '%.1f'|format(r.promedio) }} / 5 ({{ r.calificaciones|length }})
+      {% else %}
+        <span class="sub">Sin calificaciones</span>
+      {% endif %}
+    </p></div>
+  </a></li>
   {% endfor %}
 </ul>
 {% endif %}

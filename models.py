@@ -28,3 +28,21 @@ class Reporte(db.Model):
     estado = db.Column(db.String(20), default="Pendiente", nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.now, nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+
+    @property
+    def promedio(self):
+        """Promedio de estrellas que le dieron los usuarios a este reporte."""
+        if not self.calificaciones:
+            return None
+        return sum(c.estrellas for c in self.calificaciones) / len(self.calificaciones)
+
+
+class Calificacion(db.Model):
+    __tablename__ = "calificaciones"
+    __table_args__ = (db.UniqueConstraint("reporte_id", "usuario_id"),)  # 1 voto por usuario y reporte
+    id = db.Column(db.Integer, primary_key=True)
+    reporte_id = db.Column(db.Integer, db.ForeignKey("reporte.id"), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    estrellas = db.Column(db.Integer, nullable=False)  # 1 a 5
+    fecha = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    reporte = db.relationship("Reporte", backref="calificaciones")
