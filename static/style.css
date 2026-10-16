@@ -36,3 +36,339 @@ input,select,textarea{display:block;width:100%;margin-top:.3rem;padding:.6rem;bo
 .gps{background:var(--fondo);padding:.6rem;border-radius:6px;font-size:.9rem}
 dl{display:grid;grid-template-columns:max-content 1fr;gap:.3rem 1rem}
 dt{font-weight:700}dd{margin:0}
+
+/* --- ESTILOS NUEVOS EXCLUSIVOS PARA LOGIN Y REGISTRO --- */
+.tarjeta-auth {
+  padding: 2.5rem 2rem;
+  box-shadow: 0 10px 30px rgba(20, 33, 61, 0.08); 
+  border-top: 5px solid var(--senal); 
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+  font-size: 1.8rem;
+  color: var(--tinta);
+}
+
+.tarjeta-auth input {
+  background-color: var(--fondo);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  padding: 0.75rem; 
+}
+
+.tarjeta-auth input:focus {
+  background-color: var(--blanco);
+}
+
+.btn-auth {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1.05rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(252, 163, 17, 0.25);
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.btn-auth:hover {
+  transform: translateY(-2px);
+}
+
+.enlace-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--borde);
+}
+
+.enlace-footer a {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--senal);
+  text-decoration-thickness: 2px;
+  transition: color 0.2s;
+}
+
+.enlace-footer a:hover {
+  color: var(--senal);
+}
+
+/* --- ESTILOS MEJORADOS PARA MAPA Y REPORTES --- */
+
+/* Contenedor blanco para la barra de filtros */
+.tarjeta-filtros {
+  background: var(--blanco);
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(20, 33, 61, 0.05);
+  border: 1px solid var(--borde);
+  margin-bottom: 1.5rem;
+}
+
+.tarjeta-filtros .filtros {
+  margin: 0; 
+}
+
+/* Sombra suave para el cuadro del mapa */
+.mapa-premium {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: none; /* Dejamos que la sombra defina el borde */
+}
+
+/* Efectos visuales para las tarjetas de cada reporte en la lista */
+.tarjeta-reporte {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  align-items: stretch !important; /* Para que la imagen y el texto queden alineados */
+}
+
+.tarjeta-reporte:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(20, 33, 61, 0.12);
+  border-color: var(--senal);
+}
+
+/* Organización del texto dentro de las tarjetitas */
+.info-reporte {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.desc-corta {
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0.4rem 0 !important;
+}
+
+.fecha-corta {
+  color: #888;
+  font-weight: 600;
+}
+
+/* --- ESTILOS EXCLUSIVOS PARA EL DETALLE DEL REPORTE --- */
+.tarjeta-detalle {
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(20, 33, 61, 0.08);
+  /* Un borde superior azul oscuro para variar del naranja del login */
+  border-top: 5px solid var(--tinta); 
+}
+
+.btn-volver {
+  display: inline-block;
+  color: #666;
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.btn-volver:hover {
+  color: var(--tinta);
+  transform: translateX(-4px); /* Efecto de deslizarse a la izquierda */
+}
+
+.titulo-estado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--fondo);
+  padding-bottom: 1rem;
+}
+
+.titulo-estado h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--tinta);
+}
+
+.estado-detalle {
+  font-size: 0.95rem;
+  padding: 0.5rem 1.2rem;
+}
+
+/* Sistema de grilla: 1 columna en móviles, 2 en PC */
+.contenido-detalle {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .contenido-detalle {
+    grid-template-columns: 1fr 1fr; /* Mitad y mitad */
+    align-items: start;
+  }
+}
+
+.foto-detalle {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border: 1px solid var(--borde);
+  margin: 0;
+}
+
+.seccion-info h3 {
+  color: var(--tinta);
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+}
+
+/* Caja gris clarito para resaltar la descripción */
+.descripcion-reporte {
+  background: var(--fondo);
+  padding: 1.2rem;
+  border-radius: 8px;
+  color: #444;
+  line-height: 1.6;
+  border-left: 4px solid var(--senal);
+  margin-bottom: 2rem;
+}
+
+/* Tarjeta interna para los datos estructurados */
+.caja-metadatos {
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 1.2rem;
+}
+
+.metadato-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.metadato-item:last-of-type {
+  margin-bottom: 1.5rem;
+}
+
+.metadato-titulo {
+  color: #777;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.metadato-valor {
+  font-size: 1.05rem;
+  color: var(--tinta);
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+/* Botón especial para el mapa externo */
+.btn-mapa-externo {
+  width: 100%;
+  text-align: center;
+  background-color: var(--tinta);
+  color: var(--blanco);
+  font-weight: 600;
+  padding: 0.8rem;
+  box-shadow: 0 4px 10px rgba(20, 33, 61, 0.2);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.btn-mapa-externo:hover {
+  background-color: #21355e; /* Azul un poco más claro */
+  transform: translateY(-2px);
+  color: var(--blanco);
+}
+
+/* --- ESTILOS EXCLUSIVOS PARA EL FORMULARIO DE REPORTAR --- */
+
+.campo-etiqueta {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+/* Unificamos el diseño para selects, textareas e inputs */
+.campo-entrada {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: var(--fondo);
+  transition: all 0.3s ease;
+  font-family: inherit;
+  color: var(--tinta);
+}
+
+.campo-entrada:focus {
+  background-color: var(--blanco);
+  border-color: var(--senal);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(252, 163, 17, 0.15); /* Brillo naranja de tu marca */
+}
+
+/* Mejora visual brutal para el botón nativo de subir archivos */
+.input-foto {
+  padding: 0.6rem;
+  background-color: var(--blanco);
+  cursor: pointer;
+}
+
+.input-foto::file-selector-button {
+  background-color: var(--tinta);
+  color: var(--blanco);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-right: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.input-foto::file-selector-button:hover {
+  background-color: #21355e; /* Azul más claro */
+}
+
+/* Indicadores de estado del GPS */
+.contenedor-gps {
+  margin-bottom: 1.5rem;
+}
+
+.gps-status {
+  display: block;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background-color: var(--fondo);
+  color: #555;
+  border: 1px solid var(--borde);
+  margin: 0;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Cuando el GPS es exitoso */
+.gps-ok {
+  background-color: #e4f4ea;
+  color: var(--ok);
+  border-color: var(--ok);
+  box-shadow: 0 4px 10px rgba(27, 127, 75, 0.1);
+}
+
+/* Cuando el GPS falla */
+.gps-error {
+  background-color: #fbe7e5;
+  color: var(--error);
+  border-color: var(--error);
+}

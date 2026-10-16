@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}Public Alert{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  
+  <!-- AQUÍ ESTÁ EL CAMBIO: Se agregó ?v=1 al final de la ruta -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4">
 </head>
 <body>
   <header class="barra">
@@ -21,6 +23,7 @@
     {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
       <p class="aviso {{ categoria }}" role="alert">{{ mensaje }}</p>
     {% endfor %}
+    
     {% block contenido %}{% endblock %}
   </main>
 </body>

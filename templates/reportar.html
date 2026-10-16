@@ -1,36 +1,73 @@
 {% extends "base.html" %}
 {% block titulo %}Reportar · Public Alert{% endblock %}
+
 {% block contenido %}
-<section class="tarjeta estrecha">
-  <h1>Reportar un problema</h1>
+<!-- Usamos la misma clase tarjeta-auth pero le cambiamos el borde superior a verde (ok) -->
+<section class="tarjeta estrecha tarjeta-auth" style="border-top-color: var(--ok);">
+  <div class="auth-header">
+    <h1>Reportar un problema</h1>
+    <p class="sub">Ayúdanos a mejorar la ciudad enviando tu reporte con foto y ubicación.</p>
+  </div>
+
   <form method="post" enctype="multipart/form-data">
-    <label>Categoría
-      <select name="categoria" required>
-        <option value="" disabled selected>Selecciona una categoría</option>
+    <label class="campo-etiqueta">
+      Categoría
+      <select name="categoria" class="campo-entrada" required>
+        <option value="" disabled selected>Selecciona una categoría...</option>
         {% for c in categorias %}<option>{{ c }}</option>{% endfor %}
       </select>
     </label>
-    <label>Descripción<textarea name="descripcion" rows="4" required placeholder="¿Qué ocurre y en qué punto exacto?"></textarea></label>
-    <label>Fotografía (cámara o galería)
-      <input type="file" name="foto" accept="image/*" capture="environment" required>
+    
+    <label class="campo-etiqueta">
+      Descripción
+      <textarea name="descripcion" class="campo-entrada" rows="4" required placeholder="¿Qué ocurre y en qué punto exacto?"></textarea>
     </label>
+    
+    <label class="campo-etiqueta">
+      Fotografía (cámara o galería)
+      <input type="file" name="foto" class="campo-entrada input-foto" accept="image/*" capture="environment" required>
+    </label>
+    
     <input type="hidden" name="latitud" id="latitud">
     <input type="hidden" name="longitud" id="longitud">
-    <p id="gps" class="gps">Obteniendo tu ubicación…</p>
-    <label id="manual" hidden>Dirección (si no se pudo usar el GPS)<input name="direccion" placeholder="Ej: Calle 72 # 10-34, Bogotá"></label>
-    <button class="btn" type="submit">Enviar reporte</button>
+    
+    <div class="contenedor-gps">
+      <p id="gps" class="gps gps-status">⏳ Obteniendo tu ubicación precisa...</p>
+    </div>
+    
+    <label id="manual" class="campo-etiqueta" hidden>
+      Dirección (si no se pudo usar el GPS)
+      <input type="text" name="direccion" class="campo-entrada" placeholder="Ej: Calle 72 # 10-34, Bogotá">
+    </label>
+    
+    <button class="btn btn-auth" type="submit" style="margin-top: 1rem;">Enviar reporte</button>
   </form>
 </section>
+
 <script>
-  // Único JS del proyecto: leer el GPS del navegador y llenar los campos ocultos.
+  // Tu mismo JS, pero le añadimos emojis y colores (clases) para que se vea interactivo
   const estado = document.getElementById("gps");
   const manual = document.getElementById("manual");
-  const falla = m => { estado.textContent = m; manual.hidden = false; };
-  if (!navigator.geolocation) falla("Tu navegador no permite GPS.");
-  else navigator.geolocation.getCurrentPosition(p => {
-    document.getElementById("latitud").value = p.coords.latitude;
-    document.getElementById("longitud").value = p.coords.longitude;
-    estado.textContent = "Ubicación capturada (precisión ±" + Math.round(p.coords.accuracy) + " m).";
-  }, () => falla("No pudimos leer tu ubicación. Permite el GPS o escribe la dirección."), {enableHighAccuracy: true, timeout: 8000});
+  
+  const falla = m => { 
+    estado.innerHTML = "📍 " + m; 
+    estado.className = "gps gps-status gps-error"; // Lo pone rojo
+    manual.hidden = false; 
+  };
+  
+  if (!navigator.geolocation) {
+    falla("Tu navegador no permite GPS.");
+  } else {
+    navigator.geolocation.getCurrentPosition(p => {
+      document.getElementById("latitud").value = p.coords.latitude;
+      document.getElementById("longitud").value = p.coords.longitude;
+      
+      // Si tiene éxito, lo pone verde con un check
+      estado.innerHTML = "✅ Ubicación capturada (precisión ±" + Math.round(p.coords.accuracy) + " m).";
+      estado.className = "gps gps-status gps-ok";
+      
+    }, () => falla("No pudimos leer tu ubicación. Permite el GPS o escribe la dirección."), 
+    {enableHighAccuracy: true, timeout: 8000});
+  }
 </script>
 {% endblock %}
