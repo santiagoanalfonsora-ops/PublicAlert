@@ -1,21 +1,14 @@
 import os
 import uuid
 import folium
-<<<<<<< HEAD
 from sqlalchemy import func
-=======
->>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73
 from markupsafe import escape
 from flask import (Flask, render_template, request, redirect, url_for,
                    flash, abort)
 from flask_login import (LoginManager, login_user, logout_user,
                          login_required, current_user)
 from werkzeug.security import generate_password_hash, check_password_hash
-<<<<<<< HEAD
 from models import db, Usuario, Reporte, Calificacion, CATEGORIAS, ESTADOS, COLORES
-=======
-from models import db, Usuario, Reporte, CATEGORIAS, ESTADOS, COLORES
->>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73
 
 BASE = os.path.abspath(os.path.dirname(__file__))
 EXTENSIONES = {"png", "jpg", "jpeg", "webp"}
@@ -156,7 +149,6 @@ def reportar():
 @login_required
 def detalle(id):
     reporte = db.session.get(Reporte, id) or abort(404)
-<<<<<<< HEAD
     mia = Calificacion.query.filter_by(reporte_id=id, usuario_id=current_user.id).first()
     return render_template("detalle.html", r=reporte, mia=mia)
 
@@ -220,9 +212,6 @@ def cambiar_estado(id):
         reporte.estado = nuevo
         db.session.commit()
     return redirect(url_for("kanban"))
-=======
-    return render_template("detalle.html", r=reporte)
->>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73
 
 
 @app.errorhandler(413)
@@ -235,8 +224,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     app.run(debug=True)
-=======
-    app.run(debug=True)
->>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73

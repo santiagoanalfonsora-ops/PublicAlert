@@ -28,7 +28,6 @@ class Reporte(db.Model):
     estado = db.Column(db.String(20), default="Pendiente", nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.now, nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
-<<<<<<< HEAD
 
     @property
     def promedio(self):
@@ -47,5 +46,3 @@ class Calificacion(db.Model):
     estrellas = db.Column(db.Integer, nullable=False)  # 1 a 5
     fecha = db.Column(db.DateTime, default=datetime.now, nullable=False)
     reporte = db.relationship("Reporte", backref="calificaciones")
-=======
->>>>>>> cae67cc65f509089c2ece7b5478e9b7ab2da5d73
