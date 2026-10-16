@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}Public Alert{% endblock %}</title>
+  <title>{% block titulo %}PublicAlert{% endblock %}</title>
   
   <!-- AQUÍ ESTÁ EL CAMBIO: Se agregó ?v=1 al final de la ruta -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
 </head>
 <body>
   <header class="barra">
-    <a class="marca" href="{{ url_for('inicio') }}">Public Alert</a>
+    <a class="marca" href="{{ url_for('inicio') }}">Public<span class="texto-rojo">Alert</span></a>
     {% if current_user.is_authenticated %}
     <nav>
       <a href="{{ url_for('mapa') }}">Mapa</a>
