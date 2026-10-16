@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Reportar · Public Alert{% endblock %}
+{% block contenido %}
+<section class="tarjeta estrecha">
+  <h1>Reportar un problema</h1>
+  <form method="post" enctype="multipart/form-data">
+    <label>Categoría
+      <select name="categoria" required>
+        <option value="" disabled selected>Selecciona una categoría</option>
+        {% for c in categorias %}<option>{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Descripción<textarea name="descripcion" rows="4" required placeholder="¿Qué ocurre y en qué punto exacto?"></textarea></label>
+    <label>Fotografía (cámara o galería)
+      <input type="file" name="foto" accept="image/*" capture="environment" required>
+    </label>
+    <input type="hidden" name="latitud" id="latitud">
+    <input type="hidden" name="longitud" id="longitud">
+    <p id="gps" class="gps">Obteniendo tu ubicación…</p>
+    <label id="manual" hidden>Dirección (si no se pudo usar el GPS)<input name="direccion" placeholder="Ej: Calle 72 # 10-34, Bogotá"></label>
+    <button class="btn" type="submit">Enviar reporte</button>
+  </form>
+</section>
+<script>
+  // Único JS del proyecto: leer el GPS del navegador y llenar los campos ocultos.
+  const estado = document.getElementById("gps");
+  const manual = document.getElementById("manual");
+  const falla = m => { estado.textContent = m; manual.hidden = false; };
+  if (!navigator.geolocation) falla("Tu navegador no permite GPS.");
+  else navigator.geolocation.getCurrentPosition(p => {
+    document.getElementById("latitud").value = p.coords.latitude;
+    document.getElementById("longitud").value = p.coords.longitude;
+    estado.textContent = "Ubicación capturada (precisión ±" + Math.round(p.coords.accuracy) + " m).";
+  }, () => falla("No pudimos leer tu ubicación. Permite el GPS o escribe la dirección."), {enableHighAccuracy: true, timeout: 8000});
+</script>
+{% endblock %}

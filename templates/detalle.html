@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}{{ r.categoria }} · Public Alert{% endblock %}
+{% block contenido %}
+<section class="tarjeta">
+  <a href="{{ url_for('mapa') }}">Volver al mapa</a>
+  <h1>{{ r.categoria }} <span class="estado">{{ r.estado }}</span></h1>
+  <img class="foto" src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
+  <p>{{ r.descripcion }}</p>
+  <dl>
+    <dt>Fecha</dt><dd>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</dd>
+    <dt>Reportado por</dt><dd>{{ r.autor.nombre }}</dd>
+    <dt>Ubicación</dt><dd>{{ '%.5f'|format(r.latitud) }}, {{ '%.5f'|format(r.longitud) }}
+      · <a href="https://www.openstreetmap.org/?mlat={{ r.latitud }}&mlon={{ r.longitud }}#map=18/{{ r.latitud }}/{{ r.longitud }}" target="_blank" rel="noopener">Ver en OpenStreetMap</a></dd>
+  </dl>
+  {% if r.calificaciones %}
+    {% set prom = r.promedio %}
+    <p class="estrellas" aria-label="Promedio {{ '%.1f'|format(prom) }} de 5">{{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}</p>
+    <p><strong>{{ '%.1f'|format(prom) }} / 5</strong> · {{ r.calificaciones|length }} {{ 'calificación' if r.calificaciones|length == 1 else 'calificaciones' }}</p>
+  {% else %}
+    <p class="sub">Este reporte aún no tiene calificaciones.</p>
+  {% endif %}
+  {% if r.usuario_id == current_user.id %}
+    <p class="sub">Este es tu reporte. Los demás usuarios podrán calificarlo.</p>
+  {% elif mia %}
+    <p>Tu calificación: <span class="nota-estrellas">{{ '★' * mia.estrellas }}{{ '☆' * (5 - mia.estrellas) }}</span></p>
+  {% else %}
+  <form method="post" action="{{ url_for('calificar', id=r.id) }}">
+    <p><strong>¿Te sirvió este reporte?</strong> Califícalo (solo puedes votar una vez).</p>
+    <div class="estrellas-input">
+      {% for n in [5, 4, 3, 2, 1] %}
+      <input type="radio" id="e{{ n }}" name="estrellas" value="{{ n }}" required>
+      <label for="e{{ n }}" title="{{ n }} estrellas">★</label>
+      {% endfor %}
+    </div>
+    <button class="btn" type="submit">Enviar calificación</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}
