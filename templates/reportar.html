@@ -4,6 +4,9 @@
 {% block contenido %}
 <!-- Usamos la misma clase tarjeta-auth pero le cambiamos el borde superior a verde (ok) -->
 <section class="tarjeta estrecha tarjeta-auth" style="border-top-color: var(--ok);">
+  
+  <a href="{{ url_for('inicio') }}" class="btn-volver">← Volver al inicio</a>
+
   <div class="auth-header">
     <h1>Reportar un problema</h1>
     <p class="sub">Ayúdanos a mejorar la ciudad enviando tu reporte con foto y ubicación.</p>

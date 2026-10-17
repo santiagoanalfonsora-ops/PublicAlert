@@ -15,8 +15,37 @@ a { color: var(--tinta); }
 .barra a { color: #fff; text-decoration: none; }
 .marca { font-weight: 900; font-size: 1.8rem; letter-spacing: -0.5px; border-left: 6px solid var(--error); padding-left: .7rem; display: flex; align-items: center; }
 .texto-rojo { color: var(--error); }
-.barra nav { display: flex; gap: 1.2rem; }
-.barra nav a:hover, .barra nav a:focus-visible { color: #93c5fd; }
+
+.barra nav { 
+  display: flex; 
+  gap: 0.5rem; 
+  align-items: center; 
+}
+
+.barra nav a { 
+  color: var(--blanco); 
+  text-decoration: none; 
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.barra nav a:hover, 
+.barra nav a:focus-visible { 
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.barra nav a[href*="reportar"] {
+  background-color: var(--primario);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+.barra nav a[href*="reportar"]:hover {
+  background-color: #1d4ed8;
+}
 .contenedor { max-width: 1000px; margin: 0 auto; padding: 1.2rem; }
 .tarjeta { background: var(--blanco); border: 1px solid var(--borde); border-radius: 10px; padding: 1.5rem; }
 .estrecha { max-width: 460px; margin: 1.5rem auto; }
@@ -85,3 +114,53 @@ h1 { font-size: 1.5rem; margin: .2rem 0 .6rem; }
 .gps-status { display: block; padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.95rem; font-weight: 600; background-color: var(--fondo); color: #555; border: 1px solid var(--borde); margin: 0; text-align: center; transition: all 0.3s ease; }
 .gps-ok { background-color: #e4f4ea; color: var(--ok); border-color: var(--ok); box-shadow: 0 4px 10px rgba(27, 127, 75, 0.1); }
 .gps-error { background-color: #fbe7e5; color: var(--error); border-color: var(--error); }
+
+.estrellas, 
+.nota-estrellas {
+  color: var(--senal) !important;
+}
+
+.estrellas-input {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  font-size: 2.2rem; 
+  margin-bottom: 1rem;
+}
+
+.estrellas-input input[type="radio"] {
+  display: none !important; 
+}
+
+.estrellas-input label {
+  color: var(--borde); 
+  cursor: pointer;
+  transition: color 0.2s, transform 0.1s;
+  padding-right: 0.2rem;
+}
+
+.estrellas-input label:hover,
+.estrellas-input label:hover ~ label,
+.estrellas-input input[type="radio"]:checked ~ label {
+  color: var(--senal) !important; 
+}
+
+.estrellas-input label:active {
+  transform: scale(0.9);
+}
+
+/* =========================================
+   COLORES DINÁMICOS PARA ESTADOS
+========================================= */
+/* Estado Pendiente (Amarillo/Naranja) */
+.estado.estado-pendiente {
+  background-color: var(--senal);
+  color: #fff;
+}
+
+/* Estado Atendido o Resuelto (Verde) */
+.estado.estado-atendido,
+.estado.estado-resuelto {
+  background-color: var(--ok);
+  color: #fff;
+}

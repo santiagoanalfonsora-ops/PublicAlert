@@ -2,39 +2,73 @@
 {% block titulo %}{{ r.categoria }} · Public Alert{% endblock %}
 
 {% block contenido %}
-<section class="tarjeta">
-  <a href="{{ url_for('mapa') }}">Volver al mapa</a>
-  <h1>{{ r.categoria }} <span class="estado">{{ r.estado }}</span></h1>
-  <img class="foto" src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
-  <p>{{ r.descripcion }}</p>
-  <dl>
-    <dt>Fecha</dt><dd>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</dd>
-    <dt>Reportado por</dt><dd>{{ r.autor.nombre }}</dd>
-    <dt>Ubicación</dt><dd>{{ '%.5f'|format(r.latitud) }}, {{ '%.5f'|format(r.longitud) }}
-      · <a href="https://www.openstreetmap.org/?mlat={{ r.latitud }}&mlon={{ r.longitud }}#map=18/{{ r.latitud }}/{{ r.longitud }}" target="_blank" rel="noopener">Ver en OpenStreetMap</a></dd>
-  </dl>
-  {% if r.calificaciones %}
-    {% set prom = r.promedio %}
-    <p class="estrellas" aria-label="Promedio {{ '%.1f'|format(prom) }} de 5">{{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}</p>
-    <p><strong>{{ '%.1f'|format(prom) }} / 5</strong> · {{ r.calificaciones|length }} {{ 'calificación' if r.calificaciones|length == 1 else 'calificaciones' }}</p>
-  {% else %}
-    <p class="sub">Este reporte aún no tiene calificaciones.</p>
-  {% endif %}
-  {% if r.usuario_id == current_user.id %}
-    <p class="sub">Este es tu reporte. Los demás usuarios podrán calificarlo.</p>
-  {% elif mia %}
-    <p>Tu calificación: <span class="nota-estrellas">{{ '★' * mia.estrellas }}{{ '☆' * (5 - mia.estrellas) }}</span></p>
-  {% else %}
-  <form method="post" action="{{ url_for('calificar', id=r.id) }}">
-    <p><strong>¿Te sirvió este reporte?</strong> Califícalo (solo puedes votar una vez).</p>
-    <div class="estrellas-input">
-      {% for n in [5, 4, 3, 2, 1] %}
-      <input type="radio" id="e{{ n }}" name="estrellas" value="{{ n }}" required>
-      <label for="e{{ n }}" title="{{ n }} estrellas">★</label>
-      {% endfor %}
+<section class="tarjeta tarjeta-detalle">
+  <!-- Botón de regreso -->
+  <a href="{{ url_for('mapa') }}" class="btn-volver">← Volver al mapa</a>
+  
+  <div class="titulo-estado">
+    <h1>{{ r.categoria }}</h1>
+    <span class="estado estado-detalle estado-{{ r.estado|lower|replace(' ', '-') }}">{{ r.estado }}</span>
+  </div>
+
+  <div class="contenido-detalle">
+    <!-- Lado Izquierdo: Foto y Descripción -->
+    <div>
+      <img class="foto-detalle" src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
+      <div class="seccion-info" style="margin-top: 1.5rem;">
+        <h3>Descripción del problema</h3>
+        <p class="descripcion-reporte">{{ r.descripcion }}</p>
+      </div>
     </div>
-    <button class="btn" type="submit">Enviar calificación</button>
-  </form>
-  {% endif %}
+
+    <!-- Lado Derecho: Metadatos y Calificación -->
+    <div class="caja-metadatos">
+      <div class="metadato-item">
+        <span class="metadato-titulo">Fecha de reporte</span>
+        <span class="metadato-valor">{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</span>
+      </div>
+      <div class="metadato-item">
+        <span class="metadato-titulo">Reportado por</span>
+        <span class="metadato-valor">{{ r.autor.nombre }}</span>
+      </div>
+      <div class="metadato-item">
+        <span class="metadato-titulo">Ubicación</span>
+        <span class="metadato-valor" style="margin-bottom: 0.8rem;">{{ '%.5f'|format(r.latitud) }}, {{ '%.5f'|format(r.longitud) }}</span>
+        <a href="https://www.openstreetmap.org/?mlat={{ r.latitud }}&mlon={{ r.longitud }}#map=18/{{ r.latitud }}/{{ r.longitud }}" class="btn-mapa-externo" target="_blank" rel="noopener">📍 Ver en OpenStreetMap</a>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.5rem 0;">
+
+      <!-- Sistema de Calificaciones -->
+      {% if r.calificaciones %}
+        {% set prom = r.promedio %}
+        <p class="estrellas" aria-label="Promedio {{ '%.1f'|format(prom) }} de 5" style="color: var(--senal); font-size: 1.2rem; margin-bottom: 0;">
+          {{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}
+        </p>
+        <p style="margin-top: 0.2rem;"><strong>{{ '%.1f'|format(prom) }} / 5</strong> · {{ r.calificaciones|length }} {{ 'calificación' if r.calificaciones|length == 1 else 'calificaciones' }}</p>
+      {% else %}
+        <p class="sub">Este reporte aún no tiene calificaciones.</p>
+      {% endif %}
+
+      {% if r.usuario_id == current_user.id %}
+        <div class="aviso ok" style="margin-top: 1rem;"><small>Este es tu reporte. Los demás usuarios podrán calificarlo.</small></div>
+      {% elif mia %}
+        <p>Tu calificación: <span class="nota-estrellas" style="color: var(--senal);">{{ '★' * mia.estrellas }}{{ '☆' * (5 - mia.estrellas) }}</span></p>
+      {% else %}
+      <form method="post" action="{{ url_for('calificar', id=r.id) }}" style="margin-top: 1.5rem;">
+        <p style="margin-bottom: 0.5rem;"><strong>¿Te sirvió este reporte?</strong> Califícalo:</p>
+        
+        <!-- Contenedor limpio sin estilos en línea -->
+        <div class="estrellas-input">
+          {% for n in [5, 4, 3, 2, 1] %}
+          <input type="radio" id="e{{ n }}" name="estrellas" value="{{ n }}" required>
+          <label for="e{{ n }}" title="{{ n }} estrellas">★</label>
+          {% endfor %}
+        </div>
+        <button class="btn" type="submit" style="width: 100%;">Enviar calificación</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
 </section>
 {% endblock %}

@@ -4,8 +4,6 @@
 {% block contenido %}
 <div class="fila-titulo" style="margin-bottom: 1.5rem;">
   <h1>Alertas reportadas <span class="contador">{{ reportes|length }}</span></h1>
-  <!-- Usamos la clase btn-auth pero le quitamos el ancho del 100% para que se adapte -->
-  <a class="btn btn-auth" href="{{ url_for('reportar') }}" style="width: auto; margin-top: 0; padding: 0.6rem 1.2rem;">Reportar un problema</a>
 </div>
 
 <!-- Envolvemos los filtros en una tarjeta limpia -->
@@ -38,7 +36,7 @@
   {% for r in reportes %}
   <li><a href="{{ url_for('detalle', id=r.id) }}">
     <img src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
-    <div><strong>{{ r.categoria }}</strong> <span class="estado">{{ r.estado }}</span>
+    <div><strong>{{ r.categoria }}</strong> <span class="estado estado-{{ r.estado|lower|replace(' ', '-') }}">{{ r.estado }}</span>
     <p>{{ r.descripcion[:90] }}</p>
     <small>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
     <p>
