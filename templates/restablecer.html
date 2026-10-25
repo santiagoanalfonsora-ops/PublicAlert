@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva contraseña · Public Alert{% endblock %}
+{% block contenido %}
+<section class="tarjeta estrecha">
+  <h1>Crea tu nueva contraseña</h1>
+  <form method="post">
+    <label>Contraseña nueva<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+    <label>Confirmar contraseña<input type="password" name="confirmar" required minlength="8" autocomplete="new-password"></label>
+    <button class="btn" type="submit">Guardar contraseña</button>
+  </form>
+</section>
+{% endblock %}

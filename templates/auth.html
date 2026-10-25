@@ -12,6 +12,7 @@
     <label>Contraseña<input type="password" name="password" required minlength="{{ 8 if modo == 'registro' else 1 }}" autocomplete="{{ 'new-password' if modo == 'registro' else 'current-password' }}"></label>
     <button class="btn" type="submit">{{ 'Crear cuenta' if modo == 'registro' else 'Iniciar sesión' }}</button>
   </form>
+  {% if modo == 'login' %}<p class="sub"><a href="{{ url_for('recuperar') }}">¿Olvidaste tu contraseña?</a></p>{% endif %}
   <p class="sub">
     {% if modo == 'registro' %}¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a>
     {% else %}¿Eres nuevo? <a href="{{ url_for('registro') }}">Crea tu cuenta</a>{% endif %}

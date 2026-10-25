@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}Recuperar contraseña · Public Alert{% endblock %}
+{% block contenido %}
+<section class="tarjeta estrecha">
+  <h1>Recuperar contraseña</h1>
+  <p class="sub">Escribe el correo de tu cuenta y te enviaremos un enlace para crear una contraseña nueva.</p>
+  <form method="post">
+    <label>Correo electrónico<input type="email" name="email" required autocomplete="email"></label>
+    <button class="btn" type="submit">Enviar enlace</button>
+  </form>
+  <p class="sub"><a href="{{ url_for('login') }}">Volver a iniciar sesión</a></p>
+</section>
+{% endblock %}

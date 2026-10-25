@@ -1,7 +1,9 @@
 import os
+import smtplib
 import uuid
 import folium
-from sqlalchemy import func
+from email.message import EmailMessage
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from markupsafe import escape
 from flask import (Flask, render_template, request, redirect, url_for,
                    flash, abort)
@@ -24,6 +26,24 @@ db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 login_manager.login_message = "Inicia sesión para continuar."
+serializador = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+
+
+def enviar_correo(destino, asunto, cuerpo):
+    """Envía el correo por SMTP si hay configuración; si no, lo imprime en la terminal (modo desarrollo)."""
+    servidor = os.environ.get("SMTP_SERVER")
+    if not servidor:
+        print(f"\n--- CORREO (modo desarrollo) ---\nPara: {destino}\nAsunto: {asunto}\n{cuerpo}\n--------------------------------\n")
+        return
+    msg = EmailMessage()
+    msg["From"] = os.environ["SMTP_USER"]
+    msg["To"] = destino
+    msg["Subject"] = asunto
+    msg.set_content(cuerpo)
+    with smtplib.SMTP(servidor, int(os.environ.get("SMTP_PORT", 587)), timeout=10) as s:
+        s.starttls()
+        s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
+        s.send_message(msg)
 
 
 @login_manager.user_loader
@@ -76,6 +96,52 @@ def logout():
     return redirect(url_for("login"))
 
 
+# ---------- HU-004: Recuperar contraseña ----------
+@app.route("/recuperar", methods=["GET", "POST"])
+def recuperar():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        usuario = Usuario.query.filter_by(email=email).first()
+        if usuario:
+            token = serializador.dumps({"id": usuario.id, "h": usuario.password_hash[-12:]}, salt="recuperar")
+            enlace = url_for("restablecer", token=token, _external=True)
+            try:
+                enviar_correo(usuario.email, "Recupera tu contraseña · Public Alert",
+                              f"Hola {usuario.nombre},\n\nEntra a este enlace para crear una contraseña nueva "
+                              f"(vence en 1 hora):\n{enlace}\n\nSi no fuiste tú, ignora este mensaje.")
+            except Exception:
+                app.logger.exception("No se pudo enviar el correo de recuperación")
+        # Mismo mensaje exista o no el correo, para no revelar qué correos están registrados
+        flash("Si el correo está registrado, te enviamos un enlace para recuperar tu contraseña.", "ok")
+        return redirect(url_for("login"))
+    return render_template("recuperar.html")
+
+
+@app.route("/restablecer/<token>", methods=["GET", "POST"])
+def restablecer(token):
+    try:
+        datos = serializador.loads(token, salt="recuperar", max_age=3600)  # vence en 1 hora
+    except (SignatureExpired, BadSignature):
+        flash("El enlace no es válido o ya venció. Solicita uno nuevo.", "error")
+        return redirect(url_for("recuperar"))
+    usuario = db.session.get(Usuario, datos["id"])
+    if not usuario or usuario.password_hash[-12:] != datos["h"]:  # el enlace se invalida al cambiar la clave
+        flash("Este enlace ya fue usado. Solicita uno nuevo.", "error")
+        return redirect(url_for("recuperar"))
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if len(password) < 8:
+            flash("La contraseña debe tener mínimo 8 caracteres.", "error")
+        elif password != request.form.get("confirmar", ""):
+            flash("Las contraseñas no coinciden.", "error")
+        else:
+            usuario.password_hash = generate_password_hash(password)
+            db.session.commit()
+            flash("Contraseña actualizada. Ya puedes iniciar sesión.", "ok")
+            return redirect(url_for("login"))
+    return render_template("restablecer.html")
+
+
 # ---------- CU06: Consultar mapa de reportes (HU-003 filtros) ----------
 @app.route("/mapa")
 @login_required
@@ -91,7 +157,8 @@ def mapa():
 
     m = folium.Map(location=[4.7110, -74.0721], zoom_start=12)  # Bogotá
     for r in reportes:
-        popup = (f"<b>{escape(r.categoria)}</b><br>{escape(r.descripcion[:80])}<br>"
+        nota = f"★ {r.promedio:.1f} ({len(r.calificaciones)})<br>" if r.calificaciones else ""
+        popup = (f"<b>{escape(r.categoria)}</b><br>{escape(r.descripcion[:80])}<br>{nota}"
                  f"<a href='{url_for('detalle', id=r.id)}' target='_top'>Ver detalle</a>")
         folium.Marker([r.latitud, r.longitud], popup=folium.Popup(popup, max_width=240),
                       tooltip=r.categoria,
@@ -153,65 +220,27 @@ def detalle(id):
     return render_template("detalle.html", r=reporte, mia=mia)
 
 
-# ---------- Calificación de 1 a 5 estrellas (cualquier usuario, 1 voto por reporte) ----------
+# ---------- Calificación de 1 a 5 estrellas (otros usuarios, un solo voto por reporte) ----------
 @app.route("/reporte/<int:id>/calificar", methods=["POST"])
 @login_required
 def calificar(id):
     reporte = db.session.get(Reporte, id) or abort(404)
+    ya_voto = Calificacion.query.filter_by(reporte_id=id, usuario_id=current_user.id).first()
     try:
         estrellas = int(request.form.get("estrellas", ""))
     except ValueError:
         estrellas = 0
-    if reporte.estado != "Atendido":
-        flash("Solo puedes calificar cuando el reporte esté atendido.", "error")
+    if reporte.usuario_id == current_user.id:
+        flash("No puedes calificar tu propio reporte.", "error")
+    elif ya_voto:
+        flash("Ya calificaste este reporte. No puedes calificarlo de nuevo.", "error")
     elif not 1 <= estrellas <= 5:
         flash("Selecciona entre 1 y 5 estrellas.", "error")
     else:
-        voto = Calificacion.query.filter_by(reporte_id=id, usuario_id=current_user.id).first()
-        if voto:  # si ya había calificado, se actualiza su voto
-            voto.estrellas = estrellas
-            flash("Actualizamos tu calificación.", "ok")
-        else:
-            db.session.add(Calificacion(reporte_id=id, usuario_id=current_user.id, estrellas=estrellas))
-            flash("¡Gracias por tu calificación!", "ok")
+        db.session.add(Calificacion(reporte_id=id, usuario_id=current_user.id, estrellas=estrellas))
         db.session.commit()
+        flash("¡Gracias por tu calificación!", "ok")
     return redirect(url_for("detalle", id=id))
-
-
-# ---------- Tablero kanban de reportes (solo administrador = primer usuario registrado) ----------
-def es_admin():
-    return current_user.is_authenticated and current_user.id == 1
-
-
-@app.context_processor
-def inyectar_admin():
-    return {"es_admin": es_admin()}
-
-
-@app.route("/kanban")
-@login_required
-def kanban():
-    if not es_admin():
-        abort(403)
-    columnas = {e: Reporte.query.filter_by(estado=e).order_by(Reporte.fecha.desc()).all()
-                for e in ESTADOS}
-    promedio = db.session.query(func.avg(Calificacion.estrellas)).scalar()
-    total = Calificacion.query.count()
-    return render_template("kanban.html", columnas=columnas, estados=ESTADOS,
-                           promedio=promedio, total=total)
-
-
-@app.route("/reporte/<int:id>/estado", methods=["POST"])
-@login_required
-def cambiar_estado(id):
-    if not es_admin():
-        abort(403)
-    reporte = db.session.get(Reporte, id) or abort(404)
-    nuevo = request.form.get("estado")
-    if nuevo in ESTADOS:
-        reporte.estado = nuevo
-        db.session.commit()
-    return redirect(url_for("kanban"))
 
 
 @app.errorhandler(413)
