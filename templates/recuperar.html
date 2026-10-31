@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Recuperar contraseña · Public Alert{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta estrecha tarjeta-auth">
+  <div class="auth-header">
+    <h1>Recupera tu acceso</h1>
+    <p class="sub">Ingresa tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.</p>
+  </div>
+
+  <form method="post">
+    <label>
+      Correo electrónico
+      <input type="email" name="email" placeholder="tu@correo.com" required autocomplete="email">
+    </label>
+    
+    <button class="btn btn-auth" type="submit">Enviar instrucciones</button>
+  </form>
+  
+  <div class="enlace-footer">
+    <p class="sub">¿Lo recordaste? <a href="{{ url_for('login') }}">Inicia sesión aquí</a></p>
+  </div>
+</section>
+{% endblock %}

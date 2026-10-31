@@ -29,12 +29,13 @@
     <button class="btn btn-auth" type="submit">{{ 'Crear cuenta' if modo == 'registro' else 'Iniciar sesión' }}</button>
   </form>
   
-  <p class="sub enlace-footer">
+  <div class="enlace-footer">
     {% if modo == 'registro' %}
-      ¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a>
+      <p class="sub">¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a></p>
     {% else %}
-      ¿Eres nuevo? <a href="{{ url_for('registro') }}">Crea tu cuenta</a>
+      <p class="sub"><a href="{{ url_for('recuperar') }}">¿Olvidaste tu contraseña?</a></p>
+      <p class="sub">¿Eres nuevo? <a href="{{ url_for('registro') }}">Crea tu cuenta</a></p>
     {% endif %}
-  </p>
+  </div>
 </section>
 {% endblock %}

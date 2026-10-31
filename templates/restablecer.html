@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva contraseña · Public Alert{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta estrecha tarjeta-auth">
+  <div class="auth-header">
+    <h1>Crea tu nueva contraseña</h1>
+    <p class="sub">Ingresa una contraseña segura de al menos 8 caracteres.</p>
+  </div>
+
+  <form method="post">
+    <label>
+      Contraseña nueva
+      <input type="password" name="password" placeholder="••••••••" required minlength="8" autocomplete="new-password">
+    </label>
+    
+    <label>
+      Confirmar contraseña
+      <input type="password" name="confirmar" placeholder="••••••••" required minlength="8" autocomplete="new-password">
+    </label>
+    
+    <button class="btn btn-auth" type="submit">Guardar contraseña</button>
+  </form>
+  
+  <div class="enlace-footer">
+    <p class="sub"><a href="{{ url_for('login') }}">Volver a iniciar sesión</a></p>
+  </div>
+</section>
+{% endblock %}
