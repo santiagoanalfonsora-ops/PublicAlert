@@ -23,7 +23,7 @@ class Usuario(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
 
     reportes = db.relationship("Reporte", backref="autor", lazy=True)
-    afectaciones = db.relationship("Afectacion", backref="usuario", lazy=True)
+    es_admin = db.Column(db.Boolean, default=False)
 
 
 class Reporte(db.Model):

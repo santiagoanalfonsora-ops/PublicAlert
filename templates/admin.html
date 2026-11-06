@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Panel de Administrador{% endblock %}
+
+{% block contenido %}
+<!-- Tarjeta del resumen convertida en un panel de control visual -->
+<div class="tarjeta" style="margin-bottom: 20px;">
+    <h2 style="margin-bottom: 15px;">Resumen de seguimiento</h2>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        {% for estado, cantidad in conteo.items() %}
+            <div style="background-color: var(--fondo, #f8fafc); padding: 15px 20px; border-radius: 8px; border: 1px solid var(--borde, #e2e8f0); flex: 1; min-width: 120px; text-align: center;">
+                <strong style="display: block; font-size: 1.1em; color: var(--tinta, #1e293b); margin-bottom: 5px;">{{ estado }}</strong>
+                <span style="font-size: 1.8em; font-weight: bold; color: var(--senal, #eab308);">{{ cantidad }}</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="tarjeta">
+    <h2 style="margin-bottom: 15px;">Gestión de Reportes</h2>
+    <!-- Contenedor con scroll por si la pantalla es muy pequeña -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 900px;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--tinta, #1e293b);">
+                    <th style="padding: 12px 10px;">Categoría</th>
+                    <th style="padding: 12px 10px; width: 35%;">Descripción</th>
+                    <th style="padding: 12px 10px;">Fecha</th>
+                    <th style="padding: 12px 10px;">Autor</th>
+                    <th style="padding: 12px 10px; text-align: center;">Calificación</th>
+                    <th style="padding: 12px 10px; text-align: center;">Estado Actual</th>
+                    <th style="padding: 12px 10px; width: 130px; text-align: center;">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reportes %}
+                <tr style="border-bottom: 1px solid var(--borde, #e2e8f0);">
+                    <td style="padding: 12px 10px; vertical-align: middle;"><strong>{{ r.categoria }}</strong></td>
+                    <td style="padding: 12px 10px; vertical-align: middle; color: #475569;">
+                        <!-- Se amplió a 80 caracteres para aprovechar mejor el espacio de la tabla -->
+                        {{ r.descripcion[:80] }}{% if r.descripcion|length > 80 %}...{% endif %}
+                    </td>
+                    <td style="padding: 12px 10px; vertical-align: middle;">{{ r.fecha.strftime('%Y-%m-%d') }}</td>
+                    <td style="padding: 12px 10px; vertical-align: middle;">{{ r.autor.nombre }}</td>
+                    <td style="padding: 12px 10px; vertical-align: middle; text-align: center;">
+                        {{ r.promedio|round(1) if r.promedio else '--' }} ⭐
+                    </td>
+                    <td style="padding: 12px 10px; vertical-align: middle; text-align: center;">
+                        <span class="estado">{{ r.estado }}</span>
+                    </td>
+                    <td style="padding: 12px 10px; vertical-align: middle;">
+                        <!-- Columna de acción en formato vertical (columna) -->
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <form action="{{ url_for('cambiar_estado', id=r.id) }}" method="POST" style="margin: 0; display: flex; flex-direction: column; gap: 5px;">
+                                <select name="estado" style="padding: 6px; border-radius: 4px; border: 1px solid var(--borde, #ccc); width: 100%; font-size: 0.9em;">
+                                    {% for e in estados %}
+                                        <option value="{{ e }}" {% if r.estado == e %}selected{% endif %}>{{ e }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn" style="padding: 6px; width: 100%; font-size: 0.9em;">Guardar</button>
+                            </form>
+                            
+                            <form action="{{ url_for('eliminar_reporte', id=r.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este reporte definitivamente? Esta acción no se puede deshacer.');">
+                                <button type="submit" class="btn" style="background-color: var(--error, #dc3545); border-color: var(--error, #dc3545); padding: 6px; width: 100%; font-size: 0.9em;">Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

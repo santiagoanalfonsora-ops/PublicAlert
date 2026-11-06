@@ -499,6 +499,65 @@ def calificar(id):
 
     return redirect(url_for("detalle", id=id))
 
+@app.route('/admin')
+@login_required
+def panel_admin():
+    # Criterio 1: Acceso restringido
+    if not current_user.es_admin:
+        flash('Acceso denegado: Se requiere rol de administrador.', 'error')
+        return redirect(url_for('mapa'))
+    
+    reportes = Reporte.query.order_by(Reporte.fecha.desc()).all()
+    
+    # Criterio 4: Resumen de seguimiento
+    conteo_estados = {estado: 0 for estado in ESTADOS}
+    for r in reportes:
+        if r.estado in conteo_estados:
+            conteo_estados[r.estado] += 1
+            
+    return render_template('admin.html', reportes=reportes, estados=ESTADOS, conteo=conteo_estados)
+
+@app.route('/admin/cambiar_estado/<int:id>', methods=['POST'])
+@login_required
+def cambiar_estado(id):
+    if not current_user.es_admin:
+        return redirect(url_for('mapa'))
+        
+    reporte = Reporte.query.get_or_404(id)
+    nuevo_estado = request.form.get('estado')
+    
+    if nuevo_estado in ESTADOS:
+        reporte.estado = nuevo_estado
+        db.session.commit()
+        flash('Estado actualizado correctamente.', 'ok')
+        
+    # ESTE RETURN DEBE ESTAR ALINEADO CON EL IF
+    return redirect(url_for('panel_admin'))
+
+@app.route('/admin/eliminar_reporte/<int:id>', methods=['POST'])
+@login_required
+def eliminar_reporte(id):
+    if not current_user.es_admin:
+        return redirect(url_for('mapa'))
+        
+    reporte = Reporte.query.get_or_404(id)
+    
+    # Borrar las calificaciones asociadas
+    Calificacion.query.filter_by(reporte_id=id).delete()
+    
+    # Borrar la foto del servidor
+    if reporte.foto:
+        ruta_foto = os.path.join('static', 'uploads', reporte.foto)
+        if os.path.exists(ruta_foto):
+            os.remove(ruta_foto)
+            
+    # Borrar el reporte
+    db.session.delete(reporte)
+    db.session.commit()
+    
+    flash('Reporte eliminado exitosamente.', 'ok')
+    return redirect(url_for('panel_admin'))
+
 
 # ---------- INDICAR QUE UN REPORTE ME AFECTA ----------
 @app.route("/reporte/<int:id>/afecta", methods=["POST"])
@@ -552,8 +611,6 @@ def archivo_grande(_):
     )
     return redirect(url_for("reportar"))
 
-
-# ---------- CREAR TABLAS ----------
 with app.app_context():
     db.create_all()
 
