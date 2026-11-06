@@ -45,3 +45,96 @@ dt{font-weight:700}dd{margin:0}
 .estrellas-input label{font-size:2.2rem;line-height:1;color:#b8c0d0;cursor:pointer;margin:0;font-weight:400}
 .estrellas-input input:checked ~ label,.estrellas-input label:hover,.estrellas-input label:hover ~ label{color:var(--senal)}
 .estrellas-input input:focus-visible + label{outline:3px solid var(--senal)}
+
+
+.reporte-card {
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+        border-radius: 12px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 15px;
+    }
+
+    .reporte-enlace {
+        display: flex;
+        gap: 15px;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .reporte-info {
+        flex: 1;
+    }
+
+    .afectacion {
+        margin-top: 15px;
+        padding: 13px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 9px;
+    }
+
+    .afectacion-titulo {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: #334155;
+    }
+
+    .afectacion-contador {
+        font-size: 13px;
+        color: #475569;
+        margin-bottom: 12px;
+    }
+
+    .afectacion-contador strong {
+        color: #2563eb;
+        font-size: 17px;
+    }
+
+    .btn-afecta {
+        width: 100%;
+        padding: 11px;
+        border: none;
+        border-radius: 7px;
+        background: #2563eb;
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-afecta:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-afectado {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #86efac;
+        border-radius: 7px;
+        background: #dcfce7;
+        color: #166534;
+        font-weight: bold;
+        cursor: not-allowed;
+        opacity: 1;
+    }
+
+    @media (max-width: 600px) {
+
+        .reporte-enlace {
+            flex-direction: column;
+        }
+
+        .reporte-enlace img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+        }
+
+    }
