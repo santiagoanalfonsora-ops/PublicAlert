@@ -18,6 +18,7 @@ from typing import Any
 from typing import Callable
 from typing import cast
 from typing import Dict
+from typing import FrozenSet
 from typing import Generic
 from typing import Iterable
 from typing import Iterator
@@ -1052,6 +1053,81 @@ class SessionTransaction(_StateChange, TransactionalContext):
         bind = self.session.get_bind(bindkey, **kwargs)
         return self._connection_for_bind(bind, execution_options)
 
+    @property
+    def _connections_boundary(self) -> SessionTransaction:
+        trans = self
+        while not trans._is_transaction_boundary:
+            assert trans._parent is not None
+            trans = trans._parent
+        return trans
+
+    @property
+    def connections(self) -> FrozenSet[Connection]:
+        """The :class:`_engine.Connection` objects this
+        :class:`.SessionTransaction` has acquired so far.
+
+        Reading this attribute never acquires a connection, and works in any
+        state of the transaction.  After the transaction ends, it still holds
+        the connections that were used.
+
+        .. note::
+
+            A savepoint holds only the connections it has used itself.
+            To get all connections in the outer transaction, even while a
+            savepoint is active, use :meth:`.Session.get_transaction`
+            rather than :meth:`.Session.get_nested_transaction`::
+
+                root = session.get_transaction()
+                connections = root.connections
+
+        .. versionadded:: 2.1.7
+
+        .. seealso::
+
+            :meth:`.SessionTransaction.bound_connection`
+
+        """
+        connections = self._connections_boundary._connections
+        return frozenset(conn for conn, _, _, _ in connections.values())
+
+    def bound_connection(
+        self, bindkey: Optional[_EntityBindKey[Any]] = None, **kwargs: Any
+    ) -> Connection:
+        """Return the :class:`_engine.Connection` this
+        :class:`.SessionTransaction` has acquired for the given bind key.
+
+        The bind key is resolved as in :meth:`_orm.Session.connection`, but
+        no connection is acquired; if the transaction holds none for that
+        bind, :class:`~sqlalchemy.exc.InvalidRequestError` is raised.
+        Additional keyword arguments such as ``clause`` and ``bind`` are
+        passed to :meth:`_orm.Session.get_bind`.
+
+        .. note::
+
+            A savepoint can return only a connection it has used itself.
+            To look up a connection in the outer transaction, even while a
+            savepoint is active, use :meth:`.Session.get_transaction`
+            rather than :meth:`.Session.get_nested_transaction`::
+
+                root = session.get_transaction()
+                connection = root.bound_connection(bindkey)
+
+        .. versionadded:: 2.1.7
+
+        .. seealso::
+
+            :attr:`.SessionTransaction.connections`
+
+        """
+        bind = self.session.get_bind(bindkey, **kwargs)
+        entry = self._connections_boundary._connections.get(bind)
+        if entry is None:
+            raise sa_exc.InvalidRequestError(
+                "This transaction has not acquired a connection for "
+                f"bind {bind!r}"
+            )
+        return entry[0]
+
     @_StateChange.declare_states(
         (SessionTransactionState.ACTIVE,), _StateChangeStates.NO_CHANGE
     )
@@ -1186,6 +1262,9 @@ class SessionTransaction(_StateChange, TransactionalContext):
 
         try:
             if self._parent:
+                # the root transaction applies execution options if it
+                # acquires the connection here, else warns that they are
+                # ignored
                 conn = self._parent._connection_for_bind(
                     bind, execution_options
                 )
@@ -1204,13 +1283,16 @@ class SessionTransaction(_StateChange, TransactionalContext):
                     local_connect = True
 
             try:
-                conn_exec_opts: Dict[str, Any] = {}
-                if self.session.execution_options:
-                    conn_exec_opts.update(self.session.execution_options)
-                if execution_options:
-                    conn_exec_opts.update(execution_options)
-                if conn_exec_opts:
-                    conn = conn.execution_options(**conn_exec_opts)
+                # a savepoint receives the connection from the root
+                # transaction with execution options already applied
+                if self._parent is None:
+                    conn_exec_opts: Dict[str, Any] = {}
+                    if self.session.execution_options:
+                        conn_exec_opts.update(self.session.execution_options)
+                    if execution_options:
+                        conn_exec_opts.update(execution_options)
+                    if conn_exec_opts:
+                        conn = conn.execution_options(**conn_exec_opts)
 
                 transaction: Transaction
                 if self.session.twophase and self._parent is None:
@@ -4151,17 +4233,18 @@ class Session(_SessionClassMethods, EventTarget):
             # flush current contents if we expect to load data
             self._autoflush()
 
-        return [
-            self._merge(
-                object_state(instance),
-                attributes.instance_dict(instance),
-                load=load,
-                options=options,
-                _recursive={},
-                _resolve_conflict_map={},
-            )
-            for instance in instances
-        ]
+        with self.no_autoflush:
+            return [
+                self._merge(
+                    object_state(instance),
+                    attributes.instance_dict(instance),
+                    load=load,
+                    options=options,
+                    _recursive={},
+                    _resolve_conflict_map={},
+                )
+                for instance in instances
+            ]
 
     def _merge(
         self,

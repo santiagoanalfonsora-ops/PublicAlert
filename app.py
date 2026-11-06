@@ -26,6 +26,7 @@ from models import (
 )
 
 
+# ---------- CONFIGURACIÓN ----------
 BASE = os.path.abspath(os.path.dirname(__file__))
 EXTENSIONES = {"png", "jpg", "jpeg", "webp"}
 
@@ -50,7 +51,6 @@ serializador = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 
 # ---------- ENVÍO DE CORREOS ----------
-
 def enviar_correo(destino, asunto, cuerpo):
     servidor = os.environ.get("SMTP_SERVER")
 
@@ -83,24 +83,22 @@ def enviar_correo(destino, asunto, cuerpo):
         s.send_message(msg)
 
 
-# ---------- CONTROL DE USUARIOS ----------
-
+# ---------- CARGAR USUARIO ----------
 @login_manager.user_loader
 def cargar_usuario(user_id):
     return db.session.get(Usuario, int(user_id))
 
 
 # ---------- INICIO ----------
-
 @app.route("/")
 def inicio():
-    return redirect(
-        url_for("mapa" if current_user.is_authenticated else "login")
-    )
+    if current_user.is_authenticated:
+        return redirect(url_for("mapa"))
+
+    return redirect(url_for("login"))
 
 
-# ---------- CU01: REGISTRAR USUARIO ----------
-
+# ---------- REGISTRO ----------
 @app.route("/registro", methods=["GET", "POST"])
 def registro():
     if request.method == "POST":
@@ -111,7 +109,8 @@ def registro():
 
         if not nombre or "@" not in email or len(password) < 8:
             flash(
-                "Completa todos los campos. La contraseña debe tener mínimo 8 caracteres.",
+                "Completa todos los campos. "
+                "La contraseña debe tener mínimo 8 caracteres.",
                 "error"
             )
 
@@ -119,37 +118,32 @@ def registro():
             flash("El correo ya se encuentra registrado.", "error")
 
         else:
-            db.session.add(
-                Usuario(
-                    nombre=nombre,
-                    email=email,
-                    password_hash=generate_password_hash(password)
-                )
+            usuario = Usuario(
+                nombre=nombre,
+                email=email,
+                password_hash=generate_password_hash(password)
             )
 
+            db.session.add(usuario)
             db.session.commit()
 
             flash("Cuenta creada. Ya puedes iniciar sesión.", "ok")
-
             return redirect(url_for("login"))
 
     return render_template("auth.html", modo="registro")
 
 
-# ---------- CU02: INICIAR SESIÓN ----------
-
+# ---------- INICIAR SESIÓN ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
 
         email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
         usuario = Usuario.query.filter_by(email=email).first()
 
-        if usuario and check_password_hash(
-            usuario.password_hash,
-            request.form.get("password", "")
-        ):
+        if usuario and check_password_hash(usuario.password_hash, password):
             login_user(usuario)
             return redirect(url_for("mapa"))
 
@@ -159,7 +153,6 @@ def login():
 
 
 # ---------- CERRAR SESIÓN ----------
-
 @app.route("/logout")
 @login_required
 def logout():
@@ -167,14 +160,12 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ---------- HU-004: RECUPERAR CONTRASEÑA ----------
-
+# ---------- RECUPERAR CONTRASEÑA ----------
 @app.route("/recuperar", methods=["GET", "POST"])
 def recuperar():
     if request.method == "POST":
 
         email = request.form.get("email", "").strip().lower()
-
         usuario = Usuario.query.filter_by(email=email).first()
 
         if usuario:
@@ -208,7 +199,8 @@ def recuperar():
                 )
 
         flash(
-            "Si el correo está registrado, te enviamos un enlace para recuperar tu contraseña.",
+            "Si el correo está registrado, te enviamos un enlace "
+            "para recuperar tu contraseña.",
             "ok"
         )
 
@@ -218,7 +210,6 @@ def recuperar():
 
 
 # ---------- RESTABLECER CONTRASEÑA ----------
-
 @app.route("/restablecer/<token>", methods=["GET", "POST"])
 def restablecer(token):
 
@@ -239,42 +230,34 @@ def restablecer(token):
     usuario = db.session.get(Usuario, datos["id"])
 
     if not usuario or usuario.password_hash[-12:] != datos["h"]:
-        flash(
-            "Este enlace ya fue usado. Solicita uno nuevo.",
-            "error"
-        )
+        flash("Este enlace ya fue usado. Solicita uno nuevo.", "error")
         return redirect(url_for("recuperar"))
 
     if request.method == "POST":
 
         password = request.form.get("password", "")
+        confirmar = request.form.get("confirmar", "")
 
         if len(password) < 8:
-            flash(
-                "La contraseña debe tener mínimo 8 caracteres.",
-                "error"
-            )
+            flash("La contraseña debe tener mínimo 8 caracteres.", "error")
 
-        elif password != request.form.get("confirmar", ""):
+        elif password != confirmar:
             flash("Las contraseñas no coinciden.", "error")
 
         else:
             usuario.password_hash = generate_password_hash(password)
-
             db.session.commit()
 
             flash(
                 "Contraseña actualizada. Ya puedes iniciar sesión.",
                 "ok"
             )
-
             return redirect(url_for("login"))
 
     return render_template("restablecer.html")
 
 
-# ---------- CU06: CONSULTAR MAPA DE REPORTES ----------
-
+# ---------- MAPA DE REPORTES ----------
 @app.route("/mapa")
 @login_required
 def mapa():
@@ -292,9 +275,7 @@ def mapa():
 
     reportes = consulta.order_by(Reporte.fecha.desc()).all()
 
-    # Identificar los reportes donde el usuario ya indicó
-    # que se encuentra afectado.
-
+    # Identificar los reportes que ya afectan al usuario actual
     mis_afectaciones = {
         a.reporte_id
         for a in Afectacion.query.filter_by(
@@ -302,8 +283,7 @@ def mapa():
         ).all()
     }
 
-    # Crear mapa de Bogotá.
-
+    # Crear mapa
     m = folium.Map(
         location=[4.7110, -74.0721],
         zoom_start=12
@@ -311,17 +291,20 @@ def mapa():
 
     for r in reportes:
 
-        nota = (
-            f"★ {r.promedio:.1f} ({len(r.calificaciones)})<br>"
-            if r.calificaciones else ""
-        )
+        nota = ""
+
+        if r.calificaciones:
+            nota = (
+                f"★ {r.promedio:.1f} "
+                f"({len(r.calificaciones)})<br>"
+            )
 
         popup = (
             f"<b>{escape(r.categoria)}</b><br>"
             f"{escape(r.descripcion[:80])}<br>"
             f"{nota}"
-            f"<a href='{url_for('detalle', id=r.id)}' target='_top'>"
-            f"Ver detalle</a>"
+            f"<a href='{url_for('detalle', id=r.id)}' "
+            f"target='_top'>Ver detalle</a>"
         )
 
         folium.Marker(
@@ -351,8 +334,7 @@ def mapa():
     )
 
 
-# ---------- CU03 + CU04 + CU05: CREAR REPORTE ----------
-
+# ---------- CREAR REPORTE ----------
 @app.route("/reportar", methods=["GET", "POST"])
 @login_required
 def reportar():
@@ -363,13 +345,14 @@ def reportar():
         descripcion = request.form.get("descripcion", "").strip()
         foto = request.files.get("foto")
 
+        lat = None
+        lon = None
+
         try:
             lat = float(request.form.get("latitud", ""))
             lon = float(request.form.get("longitud", ""))
 
-        except ValueError:
-            lat = lon = None
-
+        except (ValueError, TypeError):
             direccion = request.form.get("direccion", "").strip()
 
             if direccion:
@@ -388,7 +371,9 @@ def reportar():
                         lon = lugar.longitude
 
                 except Exception:
-                    pass
+                    app.logger.exception(
+                        "No se pudo geocodificar la dirección"
+                    )
 
         ext = (
             foto.filename.rsplit(".", 1)[-1].lower()
@@ -404,13 +389,15 @@ def reportar():
 
         elif lat is None or lon is None:
             flash(
-                "No pudimos obtener la ubicación. Permite el GPS o escribe la dirección.",
+                "No pudimos obtener la ubicación. "
+                "Permite el GPS o escribe la dirección.",
                 "error"
             )
 
         elif ext not in EXTENSIONES:
             flash(
-                "Adjunta una fotografía válida (jpg, png o webp, máximo 5 MB).",
+                "Adjunta una fotografía válida "
+                "(jpg, png o webp, máximo 5 MB).",
                 "error"
             )
 
@@ -418,27 +405,22 @@ def reportar():
             nombre = f"{uuid.uuid4().hex}.{ext}"
 
             foto.save(
-                os.path.join(
-                    app.config["UPLOAD_FOLDER"],
-                    nombre
-                )
+                os.path.join(app.config["UPLOAD_FOLDER"], nombre)
             )
 
-            db.session.add(
-                Reporte(
-                    categoria=categoria,
-                    descripcion=descripcion,
-                    foto=nombre,
-                    latitud=lat,
-                    longitud=lon,
-                    usuario_id=current_user.id
-                )
+            nuevo_reporte = Reporte(
+                categoria=categoria,
+                descripcion=descripcion,
+                foto=nombre,
+                latitud=lat,
+                longitud=lon,
+                usuario_id=current_user.id
             )
 
+            db.session.add(nuevo_reporte)
             db.session.commit()
 
             flash("Reporte enviado correctamente.", "ok")
-
             return redirect(url_for("mapa"))
 
     return render_template(
@@ -447,8 +429,7 @@ def reportar():
     )
 
 
-# ---------- CU07: VER DETALLES DE INCIDENTE ----------
-
+# ---------- VER DETALLES DEL REPORTE ----------
 @app.route("/reporte/<int:id>")
 @login_required
 def detalle(id):
@@ -473,8 +454,7 @@ def detalle(id):
     )
 
 
-# ---------- CALIFICACIÓN DE 1 A 5 ESTRELLAS ----------
-
+# ---------- CALIFICAR REPORTE ----------
 @app.route("/reporte/<int:id>/calificar", methods=["POST"])
 @login_required
 def calificar(id):
@@ -488,26 +468,22 @@ def calificar(id):
 
     try:
         estrellas = int(request.form.get("estrellas", ""))
-    except ValueError:
+
+    except (ValueError, TypeError):
         estrellas = 0
 
     if reporte.usuario_id == current_user.id:
-        flash(
-            "No puedes calificar tu propio reporte.",
-            "error"
-        )
+        flash("No puedes calificar tu propio reporte.", "error")
 
     elif ya_voto:
         flash(
-            "Ya calificaste este reporte. No puedes calificarlo de nuevo.",
+            "Ya calificaste este reporte. "
+            "No puedes calificarlo de nuevo.",
             "error"
         )
 
     elif not 1 <= estrellas <= 5:
-        flash(
-            "Selecciona entre 1 y 5 estrellas.",
-            "error"
-        )
+        flash("Selecciona entre 1 y 5 estrellas.", "error")
 
     else:
         db.session.add(
@@ -519,44 +495,39 @@ def calificar(id):
         )
 
         db.session.commit()
-
         flash("¡Gracias por tu calificación!", "ok")
 
     return redirect(url_for("detalle", id=id))
 
 
-# ---------- NUEVA FUNCIONALIDAD: ME AFECTA A MÍ ----------
-
+# ---------- INDICAR QUE UN REPORTE ME AFECTA ----------
 @app.route("/reporte/<int:id>/afecta", methods=["POST"])
 @login_required
 def afectar_reporte(id):
 
     reporte = db.session.get(Reporte, id) or abort(404)
 
-    ya_registrado = Afectacion.query.filter_by(
+    ya_afectado = Afectacion.query.filter_by(
         reporte_id=id,
         usuario_id=current_user.id
     ).first()
 
-    if ya_registrado:
-
+    if ya_afectado:
         flash(
             "Ya indicaste que este reporte te afecta.",
             "error"
         )
 
     else:
-
-        afectacion = Afectacion(
-            reporte_id=id,
+        nueva_afectacion = Afectacion(
+            reporte_id=reporte.id,
             usuario_id=current_user.id
         )
 
-        db.session.add(afectacion)
+        db.session.add(nueva_afectacion)
 
         try:
             db.session.commit()
-
             flash(
                 "Tu participación fue registrada correctamente.",
                 "ok"
@@ -564,9 +535,8 @@ def afectar_reporte(id):
 
         except Exception:
             db.session.rollback()
-
             flash(
-                "No fue posible registrar tu participación.",
+                "No se pudo registrar tu participación.",
                 "error"
             )
 
@@ -574,25 +544,20 @@ def afectar_reporte(id):
 
 
 # ---------- CONTROL DE ARCHIVOS GRANDES ----------
-
 @app.errorhandler(413)
 def archivo_grande(_):
-
     flash(
         "La imagen supera los 5 MB. Elige una más liviana.",
         "error"
     )
-
     return redirect(url_for("reportar"))
 
 
-# ---------- CREAR TABLAS DE LA BASE DE DATOS ----------
-
+# ---------- CREAR TABLAS ----------
 with app.app_context():
     db.create_all()
 
 
 # ---------- EJECUTAR APLICACIÓN ----------
-
 if __name__ == "__main__":
     app.run(debug=True)

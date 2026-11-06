@@ -626,6 +626,10 @@ class ConnectionPoolEntry(ManagesConnection):
         raise NotImplementedError()
 
 
+# no-op callback for weakrefs; see _ConnectionRecord.checkout
+_NOOP_WEAKREF_CALLBACK = lambda ref: None  # noqa: E731
+
+
 class _ConnectionRecord(ConnectionPoolEntry):
     """Maintains a position in a connection pool which references a pooled
     connection.
@@ -721,8 +725,20 @@ class _ConnectionRecord(ConnectionPoolEntry):
         fairy = _ConnectionFairy(pool, dbapi_connection, rec, echo)
 
         # assign fairy_ref to the ConnectionRecord; note that under StaticPool,
-        # this could be swapping out an existing fairy on that ConnectionRecord
-        rec.fairy_ref = weakref.ref(fairy)
+        # this could be swapping out an existing fairy on that record.
+        #
+        # the weakref gets a no-op callback because Python clears weakrefs
+        # that have callbacks before running any weakref callback, including
+        # the fairy's finalizer, which relies on rec.fairy_ref() being None;
+        # since Python 3.15, a weakref without a callback to an object in a
+        # reference cycle isn't cleared until after finalizers run
+        # (cpython gh-135552).  #13738
+        #
+        # an alternative is for needs_gc to also treat a fairy whose
+        # finalizer was already called as gone.  that requires atexit=False
+        # on the finalizer, otherwise its call at interpreter exit would
+        # reset and check in connections that are still checked out.
+        rec.fairy_ref = weakref.ref(fairy, _NOOP_WEAKREF_CALLBACK)
 
         if echo:
             pool.logger.debug(

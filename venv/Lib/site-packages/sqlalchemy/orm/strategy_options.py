@@ -2086,6 +2086,15 @@ class _AttributeStrategyLoad(_LoadElement):
         if key in context:
             existing_aliased_insp = context[key]
             this_aliased_insp = pwpi
+            if existing_aliased_insp.mapper is not this_aliased_insp.mapper:
+                raise sa_exc.InvalidRequestError(
+                    "Can't combine of_type() targets "
+                    f"{existing_aliased_insp} and {this_aliased_insp} "
+                    f"along the relationship {start_path[-1]} in "
+                    "the same query.  To load multiple subclasses along a "
+                    "single relationship, use a single with_polymorphic() "
+                    "object that includes all of the target classes."
+                )
             new_aliased_insp = existing_aliased_insp._merge_with(
                 this_aliased_insp
             )
@@ -2404,10 +2413,7 @@ def _parse_attr_argument(
 
     """
     try:
-        # TODO: need to figure out this None thing being returned by
-        # inspect(), it should not have None as an option in most cases
-        # if at all
-        insp: InspectionAttr = inspect(attr)  # type: ignore[assignment]
+        insp: InspectionAttr = inspect(attr)
     except sa_exc.NoInspectionAvailable as err:
         raise sa_exc.ArgumentError(
             "expected ORM mapped attribute for loader strategy argument"
