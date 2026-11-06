@@ -542,22 +542,25 @@ def eliminar_reporte(id):
         
     reporte = Reporte.query.get_or_404(id)
     
-    # Borrar las calificaciones asociadas
+    # 1. NUEVO: Borrar las afectaciones asociadas al reporte
+    # (Asegúrate de que el nombre del modelo sea exactamente Afectacion, si es distinto, cámbialo aquí)
+    Afectacion.query.filter_by(reporte_id=id).delete()
+    
+    # 2. Borrar las calificaciones asociadas
     Calificacion.query.filter_by(reporte_id=id).delete()
     
-    # Borrar la foto del servidor
+    # 3. Borrar la foto del servidor
     if reporte.foto:
         ruta_foto = os.path.join('static', 'uploads', reporte.foto)
         if os.path.exists(ruta_foto):
             os.remove(ruta_foto)
             
-    # Borrar el reporte
+    # 4. Finalmente, borrar el reporte
     db.session.delete(reporte)
     db.session.commit()
     
     flash('Reporte eliminado exitosamente.', 'ok')
     return redirect(url_for('panel_admin'))
-
 
 # ---------- INDICAR QUE UN REPORTE ME AFECTA ----------
 @app.route("/reporte/<int:id>/afecta", methods=["POST"])
