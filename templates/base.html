@@ -15,6 +15,12 @@
     <nav>
       <a href="{{ url_for('mapa') }}">Mapa</a>
       <a href="{{ url_for('reportar') }}">Reportar</a>
+      
+      <!-- AQUÍ VA EL NUEVO ENLACE PARA EL ADMIN -->
+      {% if current_user.es_admin %}
+        <a href="{{ url_for('panel_admin') }}">Panel Admin</a>
+      {% endif %}
+      
       <a href="{{ url_for('logout') }}">Salir ({{ current_user.nombre }})</a>
     </nav>
     {% endif %}
