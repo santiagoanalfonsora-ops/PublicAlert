@@ -630,19 +630,6 @@ def archivo_grande(_):
 with app.app_context():
     db.create_all()
 
-@app.route("/hacerme-admin-secreto")
-def hacerme_admin():
-    from models import Usuario
-    # Cambia esto por tu correo real
-    usuario = Usuario.query.filter_by(email="oscarsantiagoalfonso79@gmail.com").first()
-    
-    if usuario:
-        usuario.es_admin = True
-        db.session.commit()
-        return "¡Listo! Ya eres administrador. Ve a /admin"
-    
-    return "No se encontró el usuario."
-
 # ---------- EJECUTAR APLICACIÓN ----------
 if __name__ == "__main__":
     app.run(debug=True)
