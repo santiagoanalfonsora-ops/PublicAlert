@@ -32,9 +32,21 @@ EXTENSIONES = {"png", "jpg", "jpeg", "webp"}
 
 app = Flask(__name__)
 
+# --- INICIO DE CONFIGURACIÓN DE BASE DE DATOS ---
+# 1. Definimos la ruta local de SQLite por si no estamos en Render
+ruta_sqlite_local = "sqlite:///" + os.path.join(BASE, "publicalert.db")
+
+# 2. Obtenemos la URL de Render (DATABASE_URL), si no existe, usa la local
+database_url = os.environ.get("DATABASE_URL", ruta_sqlite_local)
+
+# 3. Corregimos el prefijo porque Render entrega postgres:// y SQLAlchemy pide postgresql://
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+# --- FIN DE CONFIGURACIÓN DE BASE DE DATOS ---
+
 app.config.update(
     SECRET_KEY=os.environ.get("SECRET_KEY", "cambiar-en-produccion"),
-    SQLALCHEMY_DATABASE_URI="sqlite:///" + os.path.join(BASE, "publicalert.db"),
+    SQLALCHEMY_DATABASE_URI=database_url,  # <-- Aquí inyectamos la variable corregida
     UPLOAD_FOLDER=os.path.join(BASE, "static", "uploads"),
     MAX_CONTENT_LENGTH=5 * 1024 * 1024
 )
@@ -48,7 +60,6 @@ login_manager.login_view = "login"
 login_manager.login_message = "Inicia sesión para continuar."
 
 serializador = URLSafeTimedSerializer(app.config["SECRET_KEY"])
-
 
 # ---------- ENVÍO DE CORREOS ----------
 def enviar_correo(destino, asunto, cuerpo):
