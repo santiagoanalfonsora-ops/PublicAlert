@@ -40,9 +40,11 @@ ruta_sqlite_local = "sqlite:///" + os.path.join(BASE, "publicalert.db")
 database_url = os.environ.get("DATABASE_URL", ruta_sqlite_local)
 
 # 3. Corregimos el prefijo porque Render entrega postgres:// y SQLAlchemy pide postgresql://
+# 3. Corregimos el prefijo para forzar el uso de psycopg2
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
-# --- FIN DE CONFIGURACIÓN DE BASE DE DATOS ---
+elif database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 app.config.update(
     SECRET_KEY=os.environ.get("SECRET_KEY", "cambiar-en-produccion"),
