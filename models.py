@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -30,7 +29,7 @@ class Reporte(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     categoria = db.Column(db.String(30), nullable=False)
     descripcion = db.Column(db.Text, nullable=False)
-    foto = db.Column(db.String(255), nullable=False)
+    foto = db.Column(db.Text, nullable=False)
     latitud = db.Column(db.Float, nullable=False)
     longitud = db.Column(db.Float, nullable=False)
     estado = db.Column(db.String(20), default="Pendiente", nullable=False)

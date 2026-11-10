@@ -1,8 +1,8 @@
-
 import os
 import smtplib
 import uuid
 import folium
+import base64
 
 from email.message import EmailMessage
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -415,16 +415,13 @@ def reportar():
             )
 
         else:
-            nombre = f"{uuid.uuid4().hex}.{ext}"
-
-            foto.save(
-                os.path.join(app.config["UPLOAD_FOLDER"], nombre)
-            )
+            contenido_foto = foto.read()
+            foto_base64 = f"data:{foto.content_type};base64,{base64.b64encode(contenido_foto).decode('utf-8')}"
 
             nuevo_reporte = Reporte(
                 categoria=categoria,
                 descripcion=descripcion,
-                foto=nombre,
+                foto=foto_base64,
                 latitud=lat,
                 longitud=lon,
                 usuario_id=current_user.id

@@ -63,7 +63,7 @@
     <li class="reporte-card">
         <!-- INFORMACIÓN DEL REPORTE -->
         <a href="{{ url_for('detalle', id=r.id) }}" class="reporte-enlace">
-            <img src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
+            <img src="{{ r.foto }}" alt="Evidencia de {{ r.categoria }}">
             <div class="reporte-info">
                 <strong>{{ r.categoria }}</strong>
                 <span class="estado">{{ r.estado }}</span>

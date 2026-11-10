@@ -14,7 +14,7 @@
   <div class="contenido-detalle">
     <!-- Lado Izquierdo: Foto y Descripción -->
     <div>
-      <img class="foto-detalle" src="{{ url_for('static', filename='uploads/' + r.foto) }}" alt="Evidencia de {{ r.categoria }}">
+      <img class="foto-detalle" src="{{ r.foto }}" alt="Evidencia de {{ r.categoria }}">
       <div class="seccion-info" style="margin-top: 1.5rem;">
         <h3>Descripción del problema</h3>
         <p class="descripcion-reporte">{{ r.descripcion }}</p>
