@@ -41,7 +41,7 @@ database_url = os.environ.get("DATABASE_URL", ruta_sqlite_local)
 
 # 3. Corregimos el prefijo porque Render entrega postgres:// y SQLAlchemy pide postgresql://
 if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+    database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
 # --- FIN DE CONFIGURACIÓN DE BASE DE DATOS ---
 
 app.config.update(
