@@ -626,6 +626,12 @@ def archivo_grande(_):
 
 with app.app_context():
     db.create_all()
+    try:
+        # Modifica la columna foto en PostgreSQL para aceptar texto largo (Base64)
+        db.session.execute(db.text("ALTER TABLE reporte ALTER COLUMN foto TYPE TEXT;"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 # ---------- EJECUTAR APLICACIÓN ----------
 if __name__ == "__main__":
