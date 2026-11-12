@@ -65,29 +65,26 @@ login_manager.login_message = "Inicia sesión para continuar."
 serializador = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # ---------- ENVÍO DE CORREOS ----------
-def enviar_correo(destinatario, token):
+def enviar_correo(destinatario, asunto, mensaje):
     api_key = os.environ.get("BREVO_API_KEY")
     sender_email = os.environ.get("BREVO_SENDER")
     
     if not api_key:
-        print("MODO DESARROLLO - Enlace de recuperación:")
-        print(f"http://127.0.0.1:5000/restablecer/{token}")
+        print("--- MODO DESARROLLO ---")
+        print(f"Para: {destinatario}")
+        print(f"Asunto: {asunto}")
+        print(f"Mensaje:\n{mensaje}")
+        print("-----------------------")
         return
 
     url = "https://api.brevo.com/v3/smtp/email"
-    enlace = f"https://publicalert.onrender.com/restablecer/{token}"
     
     payload = {
         "sender": {"email": sender_email, "name": "Soporte PublicAlert"},
         "to": [{"email": destinatario}],
-        "subject": "Recuperación de Contraseña - PublicAlert",
-        "htmlContent": f"""
-            <h3>Recuperación de cuenta</h3>
-            <p>Hola,</p>
-            <p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
-            <p><a href='{enlace}'>{enlace}</a></p>
-            <p><small>Si no fuiste tú, ignora este mensaje.</small></p>
-        """
+        "subject": asunto,
+        # Usamos textContent porque tu mensaje usa \n para los saltos de línea
+        "textContent": mensaje 
     }
     
     headers = {
@@ -104,7 +101,7 @@ def enviar_correo(destinatario, token):
         print(f"Error enviando correo con Brevo: {e}")
         if isinstance(e, requests.exceptions.HTTPError):
             print(respuesta.text)
-            
+
 # ---------- CARGAR USUARIO ----------
 @login_manager.user_loader
 def cargar_usuario(user_id):
