@@ -3,6 +3,7 @@ import smtplib
 import uuid
 import folium
 import base64
+import requests
 
 from email.message import EmailMessage
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -64,38 +65,46 @@ login_manager.login_message = "Inicia sesión para continuar."
 serializador = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # ---------- ENVÍO DE CORREOS ----------
-def enviar_correo(destino, asunto, cuerpo):
-    servidor = os.environ.get("SMTP_SERVER")
-
-    if not servidor:
-        print(
-            f"\n--- CORREO (modo desarrollo) ---\n"
-            f"Para: {destino}\n"
-            f"Asunto: {asunto}\n"
-            f"{cuerpo}\n"
-            f"--------------------------------\n"
-        )
+def enviar_correo(destinatario, token):
+    api_key = os.environ.get("BREVO_API_KEY")
+    sender_email = os.environ.get("BREVO_SENDER")
+    
+    if not api_key:
+        print("MODO DESARROLLO - Enlace de recuperación:")
+        print(f"http://127.0.0.1:5000/restablecer/{token}")
         return
 
-    msg = EmailMessage()
-    msg["From"] = os.environ["SMTP_USER"]
-    msg["To"] = destino
-    msg["Subject"] = asunto
-    msg.set_content(cuerpo)
+    url = "https://api.brevo.com/v3/smtp/email"
+    enlace = f"https://publicalert.onrender.com/restablecer/{token}"
+    
+    payload = {
+        "sender": {"email": sender_email, "name": "Soporte PublicAlert"},
+        "to": [{"email": destinatario}],
+        "subject": "Recuperación de Contraseña - PublicAlert",
+        "htmlContent": f"""
+            <h3>Recuperación de cuenta</h3>
+            <p>Hola,</p>
+            <p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
+            <p><a href='{enlace}'>{enlace}</a></p>
+            <p><small>Si no fuiste tú, ignora este mensaje.</small></p>
+        """
+    }
+    
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json"
+    }
 
-    with smtplib.SMTP(
-        servidor,
-        int(os.environ.get("SMTP_PORT", 587)),
-        timeout=10
-    ) as s:
-        s.starttls()
-        s.login(
-            os.environ["SMTP_USER"],
-            os.environ["SMTP_PASSWORD"]
-        )
-        s.send_message(msg)
-
-
+    try:
+        respuesta = requests.post(url, json=payload, headers=headers)
+        respuesta.raise_for_status()
+        print("Correo de recuperación enviado con éxito vía Brevo")
+    except Exception as e:
+        print(f"Error enviando correo con Brevo: {e}")
+        if isinstance(e, requests.exceptions.HTTPError):
+            print(respuesta.text)
+            
 # ---------- CARGAR USUARIO ----------
 @login_manager.user_loader
 def cargar_usuario(user_id):
