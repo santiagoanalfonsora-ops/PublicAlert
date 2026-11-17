@@ -106,7 +106,7 @@
             {% if r.usuario_id == current_user.id %}
                 <!-- Si el usuario es el creador del reporte -->
                 <button class="btn-afectado" type="button" disabled style="background-color: transparent; border: 1px solid var(--borde); color: #94a3b8;">
-                    👤 Este es tu reporte
+                    Este es tu reporte
                 </button>
             {% elif r.id in mis_afectaciones %}
                 <!-- Si ya le dio al botón antes -->
