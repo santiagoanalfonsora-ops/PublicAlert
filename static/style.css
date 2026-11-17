@@ -1163,15 +1163,15 @@ input:-webkit-autofill:active {
 }
 
 /* =========================================
-   CORRECCIÓN DEL MENÚ DESPLEGABLE (SELECT)
+   MENÚ DESPLEGABLE (SELECT)
 ========================================= */
 select.campo-entrada option {
-    background-color: #0f172a; /* El mismo fondo oscuro de tus tarjetas */
-    color: #f8fafc; /* Texto blanco/claro para que resalte */
-    padding: 10px; 
+  background-color: var(--fondo);
+  color: var(--tinta);
+  padding: 10px;
 }
 
-/* Opcional: Para que la primera opción ("Selecciona una categoría...") se vea más tenue */
+/* Opción "Selecciona una categoría..." más tenue */
 select.campo-entrada option[value=""][disabled] {
-    color: #94a3b8;
+  color: var(--texto-suave);
 }
