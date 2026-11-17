@@ -62,6 +62,7 @@ a {
 
 .texto-rojo {
   color: var(--error);
+  color:#1d4ed8
 }
 
 .barra nav {
@@ -817,3 +818,4 @@ dd {
     object-fit: cover;
   }
 }
+
