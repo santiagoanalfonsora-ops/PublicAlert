@@ -3,6 +3,13 @@
 {% block titulo %}Panel de Administrador{% endblock %}
 
 {% block contenido %}
+<style>
+    /* Intenta apuntar a los nombres de clase más comunes del contenedor principal */
+    .contenedor, .container, main {
+        max-width: 1300px !important; 
+        width: 95% !important;
+    }
+</style>
 <!-- Tarjeta del resumen convertida en un panel de control visual -->
 <div class="tarjeta" style="margin-bottom: 20px;">
     <h2 style="margin-bottom: 15px;">Resumen de seguimiento</h2>
@@ -18,30 +25,44 @@
 
 <div class="tarjeta">
     <h2 style="margin-bottom: 15px;">Gestión de Reportes</h2>
-    <!-- Contenedor con scroll por si la pantalla es muy pequeña -->
+    <!-- Contenedor con scroll solo para celulares -->
     <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 900px;">
+        <!-- Se agrega table-layout: fixed para evitar que la tabla se estire -->
+        <!-- Aumentamos el min-width a 1000px para que la tabla tenga más espacio de respiración -->
+        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 1000px; table-layout: fixed;">
             <thead>
-                <tr style="border-bottom: 2px solid var(--tinta, #1e293b);">
-                    <th style="padding: 12px 10px;">Categoría</th>
-                    <th style="padding: 12px 10px; width: 35%;">Descripción</th>
-                    <th style="padding: 12px 10px;">Fecha</th>
-                    <th style="padding: 12px 10px;">Autor</th>
-                    <th style="padding: 12px 10px; text-align: center;">Calificación</th>
-                    <th style="padding: 12px 10px; text-align: center;">Estado Actual</th>
-                    <th style="padding: 12px 10px; width: 130px; text-align: center;">Acción</th>
+                <tr style="background-color: rgba(255, 255, 255, 0.05); border-bottom: 2px solid var(--borde, #e2e8f0);">
+                    
+                    <!-- Ajustamos los porcentajes (width) para distribuir mejor el espacio -->
+                    <th style="padding: 15px 10px; width: 11%; text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.1);">Categoría</th>
+                    
+                    <th style="padding: 15px 10px; width: 25%; text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.1);">Descripción</th>
+                    
+                    <th style="padding: 15px 10px; width: 10%; text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.1);">Fecha</th>
+                    
+                    <th style="padding: 15px 10px; width: 11%; text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.1);">Autor</th>
+                    
+                    <!-- Se le dio más espacio y white-space: nowrap para forzar que no se rompa -->
+                    <th style="padding: 15px 10px; width: 13%; text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.1); white-space: nowrap;">Calificación</th>
+                    
+                    <!-- Más espacio para que "Estado Actual" quepa en una sola línea -->
+                    <th style="padding: 15px 10px; width: 14%; text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.1); white-space: nowrap;">Estado Actual</th>
+                    
+                    <th style="padding: 15px 10px; width: 16%; text-align: center;">Acción</th>
                 </tr>
             </thead>
             <tbody>
                 {% for r in reportes %}
                 <tr style="border-bottom: 1px solid var(--borde, #e2e8f0);">
-                    <td style="padding: 12px 10px; vertical-align: middle;"><strong>{{ r.categoria }}</strong></td>
-                    <td style="padding: 12px 10px; vertical-align: middle; color: #475569;">
-                        <!-- Se amplió a 80 caracteres para aprovechar mejor el espacio de la tabla -->
+                    <td style="padding: 12px 10px; vertical-align: middle; word-wrap: break-word;"><strong>{{ r.categoria }}</strong></td>
+                    
+                    <!-- Se agrega word-wrap, overflow-wrap y word-break para romper textos larguísimos sin espacios -->
+                    <td style="padding: 12px 10px; vertical-align: middle; color: #475569; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
                         {{ r.descripcion[:80] }}{% if r.descripcion|length > 80 %}...{% endif %}
                     </td>
+                    
                     <td style="padding: 12px 10px; vertical-align: middle;">{{ r.fecha.strftime('%Y-%m-%d') }}</td>
-                    <td style="padding: 12px 10px; vertical-align: middle;">{{ r.autor.nombre }}</td>
+                    <td style="padding: 12px 10px; vertical-align: middle; word-wrap: break-word;">{{ r.autor.nombre }}</td>
                     <td style="padding: 12px 10px; vertical-align: middle; text-align: center;">
                         {{ r.promedio|round(1) if r.promedio else '--' }} ⭐
                     </td>
@@ -49,7 +70,6 @@
                         <span class="estado">{{ r.estado }}</span>
                     </td>
                     <td style="padding: 12px 10px; vertical-align: middle;">
-                        <!-- Columna de acción en formato vertical (columna) -->
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <form action="{{ url_for('cambiar_estado', id=r.id) }}" method="POST" style="margin: 0; display: flex; flex-direction: column; gap: 5px;">
                                 <select name="estado" style="padding: 6px; border-radius: 4px; border: 1px solid var(--borde, #ccc); width: 100%; font-size: 0.9em;">

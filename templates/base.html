@@ -5,18 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}PublicAlert{% endblock %}</title>
   
-  <!-- AQUÍ ESTÁ EL CAMBIO: Se agregó ?v=1 al final de la ruta -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+  <!-- Tipografía Poppins: Más geométrica y moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9">
 </head>
 <body>
   <header class="barra">
     <a class="marca" href="{{ url_for('inicio') }}">Public<span class="texto-rojo">Alert</span></a>
     {% if current_user.is_authenticated %}
     <nav>
-      <a href="{{ url_for('mapa') }}">Mapa</a>
       <a href="{{ url_for('reportar') }}">Reportar</a>
+      <a href="{{ url_for('mapa') }}">Mapa</a>
       
-      <!-- AQUÍ VA EL NUEVO ENLACE PARA EL ADMIN -->
       {% if current_user.es_admin %}
         <a href="{{ url_for('panel_admin') }}">Panel Admin</a>
       {% endif %}
@@ -25,12 +28,71 @@
     </nav>
     {% endif %}
   </header>
+
   <main class="contenedor">
     {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
-      <p class="aviso {{ categoria }}" role="alert">{{ mensaje }}</p>
+      <div class="aviso {{ categoria }}" role="alert">
+        <strong>Notificación:</strong> {{ mensaje }}
+      </div>
     {% endfor %}
     
     {% block contenido %}{% endblock %}
   </main>
+
+  <footer class="footer-global">
+    <p>&copy; 2026 PublicAlert. Plataforma de reporte ciudadano.</p>
+  </footer>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const formularios = document.querySelectorAll('form');
+    
+    formularios.forEach(form => {
+        form.addEventListener('invalid', function(event) {
+            event.preventDefault(); // Ocultamos el cartelito gris del navegador
+            
+            const primerInvalido = form.querySelector(':invalid');
+            
+            if (event.target === primerInvalido) {
+                // Guardamos el texto original
+                if (primerInvalido.dataset.placeholderOriginal === undefined) {
+                    primerInvalido.dataset.placeholderOriginal = primerInvalido.placeholder || '';
+                }
+                
+                primerInvalido.classList.add('campo-error');
+                
+                // EVALUAMOS QUÉ TIPO DE ERROR ES:
+                if (primerInvalido.validity.valueMissing) {
+                    // 1. Si está vacío
+                    primerInvalido.placeholder = "El campo es obligatorio";
+                } else if (primerInvalido.type === 'email' && primerInvalido.validity.typeMismatch) {
+                    // 2. Si es un correo pero le falta el "@" o el dominio
+                    primerInvalido.placeholder = "Formato de correo incorrecto";
+                } else if (primerInvalido.validity.tooShort) {
+                    // 3. Si tiene menos caracteres de los requeridos (ej. contraseñas)
+                    primerInvalido.placeholder = `Mínimo ${primerInvalido.minLength} caracteres`;
+                } else {
+                    // 4. Cualquier otro error de formato
+                    primerInvalido.placeholder = "Formato no válido";
+                }
+                
+                // Borramos lo que escribió mal para que pueda ver el mensaje en el placeholder
+                primerInvalido.value = '';
+                primerInvalido.focus(); 
+            }
+        }, true);
+    });
+
+    // Le quitamos el rojo a cualquier campo en cuanto el usuario empiece a escribir
+    const todosLosInputs = document.querySelectorAll('input, textarea, select');
+    todosLosInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.classList.contains('campo-error')) {
+                this.classList.remove('campo-error');
+                this.placeholder = this.dataset.placeholderOriginal || '';
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

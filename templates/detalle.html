@@ -6,69 +6,127 @@
   <!-- Botón de regreso -->
   <a href="{{ url_for('mapa') }}" class="btn-volver">← Volver al mapa</a>
   
-  <div class="titulo-estado">
-    <h1>{{ r.categoria }}</h1>
-    <span class="estado estado-detalle estado-{{ r.estado|lower|replace(' ', '-') }}">{{ r.estado }}</span>
+  <div class="titulo-estado" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--borde); padding-bottom: 1rem;">
+    <h1 style="margin: 0; font-size: 1.8rem;">{{ r.categoria }}</h1>
+    <!-- AQUÍ SE APLICAN LOS COLORES AUTOMÁTICOS -->
+    <span class="estado estado-grande" data-estado="{{ r.estado }}">{{ r.estado }}</span>
   </div>
 
-  <div class="contenido-detalle">
-    <!-- Lado Izquierdo: Foto y Descripción -->
-    <div>
-      <img class="foto-detalle" src="{{ r.foto }}" alt="Evidencia de {{ r.categoria }}">
-      <div class="seccion-info" style="margin-top: 1.5rem;">
-        <h3>Descripción del problema</h3>
-        <p class="descripcion-reporte">{{ r.descripcion }}</p>
-      </div>
+  <!-- INICIA LA NUEVA CUADRÍCULA (GRID) -->
+  <!-- INICIA LA NUEVA CUADRÍCULA (GRID) -->
+  <div class="detalle-contenedor">
+    
+    <!-- Lado Izquierdo: SOLO LA FOTO -->
+    <div class="detalle-imagen">
+      <img src="{{ r.foto }}" alt="Evidencia de {{ r.categoria }}">
     </div>
 
     <!-- Lado Derecho: Metadatos y Calificación -->
-    <div class="caja-metadatos">
-      <div class="metadato-item">
-        <span class="metadato-titulo">Fecha de reporte</span>
-        <span class="metadato-valor">{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</span>
+    <!-- Lado Derecho: Metadatos y Calificación (DIVIDIDO EN DOS COLUMNAS) -->
+    <!-- Lado Derecho: Metadatos, Calificación y Botón Centrado Abajo -->
+    <div class="caja-metadatos caja-metadatos-dividida">
+      
+      <!-- Columna Izquierda: Información -->
+      <div class="columna-datos">
+        <div class="metadato-item">
+          <span class="metadato-titulo">Fecha de reporte</span>
+          <span class="metadato-valor">{{ r.fecha.strftime('%d/%m/%Y - %H:%M') }}</span>
+        </div>
+        <div class="metadato-item">
+          <span class="metadato-titulo">Reportado por</span>
+          <span class="metadato-valor">{{ r.autor.nombre }}</span>
+        </div>
+        <div class="metadato-item" style="margin-bottom: 0;">
+          <span class="metadato-titulo">Ubicación</span>
+          <span class="metadato-valor">{{ '%.5f'|format(r.latitud) }}, {{ '%.5f'|format(r.longitud) }}</span>
+        </div>
       </div>
-      <div class="metadato-item">
-        <span class="metadato-titulo">Reportado por</span>
-        <span class="metadato-valor">{{ r.autor.nombre }}</span>
+
+      <!-- Columna Derecha: Calificaciones (Tu voto arriba, Global abajo) -->
+      <!-- Columna Derecha: Calificaciones (Tu voto arriba, Global abajo) -->
+      <!-- Columna Derecha: Calificaciones -->
+      <div class="columna-calificacion">
+        {% if mia %}
+          <!-- 1. Arriba: Tu calificación + puntaje a la derecha -->
+          <div class="bloque-tu-calificacion">
+            <span class="metadato-titulo" style="display: block;">Tu calificación</span>
+            <div class="fila-estrellas-puntaje">
+              <span class="estrellas-iguales">{{ '★' * mia.estrellas }}{{ '☆' * (5 - mia.estrellas) }}</span>
+              <span class="puntaje-lado">{{ '%.1f'|format(mia.estrellas) }} / 5</span>
+            </div>
+          </div>
+
+          <!-- 2. Abajo: Calificación global + puntaje a la derecha + cantidad debajo -->
+          <div class="bloque-calificacion-global" style="margin-top: 0.75rem; padding-top: 0.75rem;">
+            <span class="metadato-titulo" style="display: block;">Calificación global</span>
+            {% set prom = r.promedio %}
+            <div class="fila-estrellas-puntaje">
+              <span class="estrellas-iguales" aria-label="Promedio {{ '%.1f'|format(prom) }} de 5">
+                {{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}
+              </span>
+              <span class="puntaje-lado">{{ '%.1f'|format(prom) }} / 5</span>
+            </div>
+            <p class="cantidad-votos">
+              {{ r.calificaciones|length }} {{ 'calificación' if r.calificaciones|length == 1 else 'calificaciones' }}
+            </p>
+          </div>
+
+        {% elif r.usuario_id == current_user.id %}
+          {% if r.calificaciones %}
+            {% set prom = r.promedio %}
+            <span class="metadato-titulo" style="display: block;">Calificación global</span>
+            <div class="fila-estrellas-puntaje">
+              <span class="estrellas-iguales">{{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}</span>
+              <span class="puntaje-lado">{{ '%.1f'|format(prom) }} / 5</span>
+            </div>
+            <p class="cantidad-votos" style="margin-bottom: 0.6rem;">
+              {{ r.calificaciones|length }} {{ 'calificación' if r.calificaciones|length == 1 else 'calificaciones' }}
+            </p>
+          {% else %}
+            <p class="sub" style="font-size: 0.9rem; margin-bottom: 0.6rem;">Este reporte aún no tiene calificaciones.</p>
+          {% endif %}
+          <div class="aviso ok" style="padding: 0.75rem;"><small>Este es tu reporte. Los demás usuarios podrán calificarlo.</small></div>
+
+        {% else %}
+          {% if r.calificaciones %}
+            {% set prom = r.promedio %}
+            <span class="metadato-titulo" style="display: block;">Calificación global</span>
+            <div class="fila-estrellas-puntaje">
+              <span class="estrellas-iguales">{{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}</span>
+              <span class="puntaje-lado">{{ '%.1f'|format(prom) }} / 5</span>
+            </div>
+            <p class="cantidad-votos" style="margin-bottom: 0.6rem;">
+              {{ r.calificaciones|length }} {{ 'calificación' if r.calificaciones|length == 1 else 'calificaciones' }}
+            </p>
+          {% endif %}
+          <form method="post" action="{{ url_for('calificar', id=r.id) }}">
+            <p style="margin-bottom: 0.3rem; font-size: 0.9rem;"><strong>Califica este reporte:</strong></p>
+            <div class="estrellas-input">
+              {% for n in [5, 4, 3, 2, 1] %}
+              <input type="radio" id="e{{ n }}" name="estrellas" value="{{ n }}" required>
+              <label for="e{{ n }}" title="{{ n }} estrellas">★</label>
+              {% endfor %}
+            </div>
+            <button class="btn" type="submit" style="width: 100%; margin-top: 0.4rem; padding: 0.5rem;">Enviar calificación</button>
+          </form>
+        {% endif %}
       </div>
-      <div class="metadato-item">
-        <span class="metadato-titulo">Ubicación</span>
-        <span class="metadato-valor" style="margin-bottom: 0.8rem;">{{ '%.5f'|format(r.latitud) }}, {{ '%.5f'|format(r.longitud) }}</span>
+
+      <!-- Fila Inferior Completa: Botón centrado debajo de la línea divisoria -->
+      <div class="contenedor-boton-mapa">
         <a href="https://www.openstreetmap.org/?mlat={{ r.latitud }}&mlon={{ r.longitud }}#map=18/{{ r.latitud }}/{{ r.longitud }}" class="btn-mapa-externo" target="_blank" rel="noopener">📍 Ver en OpenStreetMap</a>
       </div>
 
-      <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.5rem 0;">
-
-      <!-- Sistema de Calificaciones -->
-      {% if r.calificaciones %}
-        {% set prom = r.promedio %}
-        <p class="estrellas" aria-label="Promedio {{ '%.1f'|format(prom) }} de 5" style="color: var(--senal); font-size: 1.2rem; margin-bottom: 0;">
-          {{ '★' * (prom|round|int) }}{{ '☆' * (5 - (prom|round|int)) }}
-        </p>
-        <p style="margin-top: 0.2rem;"><strong>{{ '%.1f'|format(prom) }} / 5</strong> · {{ r.calificaciones|length }} {{ 'calificación' if r.calificaciones|length == 1 else 'calificaciones' }}</p>
-      {% else %}
-        <p class="sub">Este reporte aún no tiene calificaciones.</p>
-      {% endif %}
-
-      {% if r.usuario_id == current_user.id %}
-        <div class="aviso ok" style="margin-top: 1rem;"><small>Este es tu reporte. Los demás usuarios podrán calificarlo.</small></div>
-      {% elif mia %}
-        <p>Tu calificación: <span class="nota-estrellas" style="color: var(--senal);">{{ '★' * mia.estrellas }}{{ '☆' * (5 - mia.estrellas) }}</span></p>
-      {% else %}
-      <form method="post" action="{{ url_for('calificar', id=r.id) }}" style="margin-top: 1.5rem;">
-        <p style="margin-bottom: 0.5rem;"><strong>¿Te sirvió este reporte?</strong> Califícalo:</p>
-        
-        <!-- Contenedor limpio sin estilos en línea -->
-        <div class="estrellas-input">
-          {% for n in [5, 4, 3, 2, 1] %}
-          <input type="radio" id="e{{ n }}" name="estrellas" value="{{ n }}" required>
-          <label for="e{{ n }}" title="{{ n }} estrellas">★</label>
-          {% endfor %}
-        </div>
-        <button class="btn" type="submit" style="width: 100%;">Enviar calificación</button>
-      </form>
-      {% endif %}
     </div>
+
+    <!-- ABAJO: Descripción abarcando todo el ancho -->
+    <div class="seccion-info-completa">
+      <h3 style="margin-bottom: 1rem;">Descripción del problema:</h3>
+      <div style="background: rgba(15, 23, 42, 0.5); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--borde);">
+        <p class="descripcion-reporte" style="margin: 0;">{{ r.descripcion }}</p>
+      </div>
+    </div>
+
   </div>
 </section>
 {% endblock %}

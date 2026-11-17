@@ -11,40 +11,36 @@
 </div>
 
 <!-- CONTENEDOR DE FILTROS Y BOTÓN -->
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
-    
-    <!-- FILTROS (Lado izquierdo) -->
-    <form class="filtros" method="get" style="display: flex; gap: 15px; align-items: flex-end; margin: 0;">
-        <label>Categoría
-            <select name="categoria">
-                <option value="">Todas</option>
-                {% for c in categorias %}
-                    <option value="{{ c }}" {% if c == f_categoria %}selected{% endif %}>
-                        {{ c }}
-                    </option>
-                {% endfor %}
-            </select>
-        </label>
+<form class="tarjeta-filtros" method="get">
+    <div class="campo-filtro">
+        <label for="filtro-categoria">Categoría</label>
+        <select id="filtro-categoria" name="categoria">
+            <option value="">Todas</option>
+            {% for c in categorias %}
+                <option value="{{ c }}" {% if c == f_categoria %}selected{% endif %}>
+                    {{ c }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
-        <label>Estado
-            <select name="estado">
-                <option value="">Todos</option>
-                {% for e in estados %}
-                    <option value="{{ e }}" {% if e == f_estado %}selected{% endif %}>
-                        {{ e }}
-                    </option>
-                {% endfor %}
-            </select>
-        </label>
+    <div class="campo-filtro">
+        <label for="filtro-estado">Estado</label>
+        <select id="filtro-estado" name="estado">
+            <option value="">Todos</option>
+            {% for e in estados %}
+                <option value="{{ e }}" {% if e == f_estado %}selected{% endif %}>
+                    {{ e }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
+    <div class="acciones-filtro">
         <button class="btn secundario" type="submit">Filtrar</button>
-    </form>
-
-    <!-- BOTÓN DE REPORTE (Lado derecho) -->
-    <a class="btn" href="{{ url_for('reportar') }}">
-        Reportar un problema
-    </a>
-</div>
+        <a class="btn" href="{{ url_for('reportar') }}">Reportar un problema</a>
+    </div>
+</form>
 
 <!-- MAPA -->
 <div class="mapa">
@@ -65,38 +61,60 @@
         <a href="{{ url_for('detalle', id=r.id) }}" class="reporte-enlace">
             <img src="{{ r.foto }}" alt="Evidencia de {{ r.categoria }}">
             <div class="reporte-info">
-                <strong>{{ r.categoria }}</strong>
-                <span class="estado">{{ r.estado }}</span>
-                <p>{{ r.descripcion[:90] }}</p>
-                <small>{{ r.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
-                <p>
-                    {% if r.calificaciones %}
-                        <span class="nota-estrellas">
-                            {{ '★' * (r.promedio|round|int) }}{{ '☆' * (5 - (r.promedio|round|int)) }}
-                        </span>
-                        {{ '%.1f'|format(r.promedio) }} / 5 ({{ r.calificaciones|length }})
-                    {% else %}
-                        <span class="sub">Sin calificaciones</span>
+                <!-- 1. TÍTULO Y ESTADO EN LA MISMA LÍNEA -->
+                <div class="info-cabecera">
+                    <strong>{{ r.categoria }}</strong>
+                    <span class="estado" data-estado="{{ r.estado }}">{{ r.estado }}</span>
+                </div>
+    
+                <!-- 2. DESCRIPCIÓN -->
+                <div class="contenedor-descripcion">
+                    <p class="descripcion-texto">{{ r.descripcion }}</p>
+                    {% if r.descripcion|length > 70 %}
+                        <span class="ver-mas">Ver más detalles</span>
                     {% endif %}
-                </p>
+                </div>
+
+                <!-- 3. FECHA Y CALIFICACIÓN EN LA MISMA LÍNEA (FOOTER) -->
+                <div class="info-pie">
+                    <!-- Agregamos %H:%M para mostrar la hora y los minutos -->
+                    <span class="fecha-limpia">{{ r.fecha.strftime('%d/%m/%Y - %H:%M') }}</span>
+        
+                    <div class="calificacion-limpia">
+                        {% if r.calificaciones %}
+                            <span class="estrellas-completas">
+                                {{ '★' * (r.promedio|round|int) }}{{ '☆' * (5 - (r.promedio|round|int)) }}
+                            </span>
+                            <span class="votos-limpios">{{ '%.1f'|format(r.promedio) }} ({{ r.calificaciones|length }})</span>
+                        {% else %}
+                            <span class="sin-votos">Sin calificaciones</span>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </a>
 
         <!-- BOTÓN INTEGRADO EN LA TARJETA -->
         <div class="afectacion">
             <div class="afectacion-titulo">
-                <span>📍</span>
                 <strong>Participación ciudadana</strong>
             </div>
             <div class="afectacion-contador">
                 👥 <strong>{{ r.total_afectados }}</strong> personas afectadas por este reporte
             </div>
 
-            {% if r.id in mis_afectaciones %}
+            {% if r.usuario_id == current_user.id %}
+                <!-- Si el usuario es el creador del reporte -->
+                <button class="btn-afectado" type="button" disabled style="background-color: transparent; border: 1px solid var(--borde); color: #94a3b8;">
+                    👤 Este es tu reporte
+                </button>
+            {% elif r.id in mis_afectaciones %}
+                <!-- Si ya le dio al botón antes -->
                 <button class="btn-afectado" type="button" disabled>
                     ✓ Ya indicaste que te afecta
                 </button>
             {% else %}
+                <!-- Si es otro usuario y no ha votado -->
                 <form method="POST" action="{{ url_for('afectar_reporte', id=r.id) }}">
                     <button class="btn-afecta" type="submit">
                         Me afecta a mí

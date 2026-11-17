@@ -2,59 +2,74 @@
 {% block titulo %}Reportar · Public Alert{% endblock %}
 
 {% block contenido %}
-<!-- Usamos la misma clase tarjeta-auth pero le cambiamos el borde superior a verde (ok) -->
-<section class="tarjeta estrecha tarjeta-auth" style="border-top-color: var(--ok);">
+<section class="tarjeta tarjeta-reporte" style="border-top-color: var(--ok);">
   
-  <a href="{{ url_for('inicio') }}" class="btn-volver">← Volver al inicio</a>
+  <a href="{{ url_for('inicio') }}" class="btn-volver" style="margin-bottom: 1.5rem; display: inline-block;">← Volver al inicio</a>
 
-  <div class="auth-header">
-    <h1>Reportar un problema</h1>
+  <div class="auth-header" style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Reportar un problema</h1>
     <p class="sub">Ayúdanos a mejorar la ciudad enviando tu reporte con foto y ubicación.</p>
   </div>
 
-  <form method="post" enctype="multipart/form-data">
-    <label class="campo-etiqueta">
-      Categoría
+  <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1.25rem;">
+    
+    <label class="campo-etiqueta" style="margin: 0;">
+      Categoría del problema
       <select name="categoria" class="campo-entrada" required>
-        <option value="" disabled selected>Selecciona una categoría...</option>
+        <option value="" disabled selected hidden>Selecciona una categoría...</option>
         {% for c in categorias %}<option>{{ c }}</option>{% endfor %}
       </select>
     </label>
     
-    <label class="campo-etiqueta">
-      Descripción
+    <label class="campo-etiqueta" style="margin: 0;">
+      Descripción detallada
       <textarea name="descripcion" class="campo-entrada" rows="4" required placeholder="¿Qué ocurre y en qué punto exacto?"></textarea>
     </label>
     
-    <label class="campo-etiqueta">
-      Fotografía (cámara o galería)
-      <input type="file" name="foto" class="campo-entrada input-foto" accept="image/*" capture="environment" required>
-    </label>
+    <div class="campo-etiqueta" style="margin: 0;">
+      Evidencia fotográfica
+      <div class="file-drop-area">
+        <i style="font-style: normal;">📸</i>
+        <span class="file-msg" id="file-msg">Toca aquí para tomar foto o elegir de la galería</span>
+        <input type="file" name="foto" class="input-foto" accept="image/*" capture="environment" required onchange="actualizarNombreArchivo(this)">
+      </div>
+    </div>
     
     <input type="hidden" name="latitud" id="latitud">
     <input type="hidden" name="longitud" id="longitud">
     
-    <div class="contenedor-gps">
-      <p id="gps" class="gps gps-status">⏳ Obteniendo tu ubicación precisa...</p>
+    <div>
+      <p style="margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: #cbd5e1;">Ubicación del reporte</p>
+      <div id="gps" class="gps-badge cargando">⏳ Obteniendo ubicación precisa...</div>
     </div>
     
-    <label id="manual" class="campo-etiqueta" hidden>
-      Dirección (si no se pudo usar el GPS)
+    <label id="manual" class="campo-etiqueta" style="margin: 0;" hidden>
+      Dirección manual (No se pudo acceder al GPS)
       <input type="text" name="direccion" class="campo-entrada" placeholder="Ej: Calle 72 # 10-34, Bogotá">
     </label>
     
-    <button class="btn btn-auth" type="submit" style="margin-top: 1rem;">Enviar reporte</button>
+    <button class="btn btn-auth" type="submit" style="margin-top: 1rem; padding: 0.85rem; font-size: 1.05rem;">Enviar reporte</button>
   </form>
 </section>
 
 <script>
-  // Tu mismo JS, pero le añadimos emojis y colores (clases) para que se vea interactivo
+  function actualizarNombreArchivo(input) {
+    const msgElement = document.getElementById('file-msg');
+    if (input.files && input.files[0]) {
+      msgElement.textContent = "✔️ Archivo seleccionado: " + input.files[0].name;
+      msgElement.style.color = "var(--ok, #10b981)";
+    } else {
+      msgElement.textContent = "Toca aquí para tomar foto o elegir de la galería";
+      msgElement.style.color = "#94a3b8";
+    }
+  }
+
   const estado = document.getElementById("gps");
   const manual = document.getElementById("manual");
   
   const falla = m => { 
     estado.innerHTML = "📍 " + m; 
-    estado.className = "gps gps-status gps-error"; // Lo pone rojo
+    estado.className = "gps-badge error"; 
     manual.hidden = false; 
   };
   
@@ -65,13 +80,11 @@
       document.getElementById("latitud").value = p.coords.latitude;
       document.getElementById("longitud").value = p.coords.longitude;
       
-      // Si tiene éxito, lo pone verde con un check
-      estado.innerHTML = "✅ Ubicación capturada (precisión ±" + Math.round(p.coords.accuracy) + " m).";
-      estado.className = "gps gps-status gps-ok";
+      estado.innerHTML = "✅ Ubicación capturada con éxito (±" + Math.round(p.coords.accuracy) + " m).";
+      estado.className = "gps-badge exito";
       
-    }, () => falla("No pudimos leer tu ubicación. Permite el GPS o escribe la dirección."), 
+    }, () => falla("No pudimos leer tu ubicación. Escribe la dirección manualmente."), 
     {enableHighAccuracy: true, timeout: 8000});
   }
 </script>
 {% endblock %}
-

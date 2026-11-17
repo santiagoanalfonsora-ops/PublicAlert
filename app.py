@@ -579,11 +579,16 @@ def eliminar_reporte(id):
     return redirect(url_for('panel_admin'))
 
 # ---------- INDICAR QUE UN REPORTE ME AFECTA ----------
+# ---------- INDICAR QUE UN REPORTE ME AFECTA ----------
 @app.route("/reporte/<int:id>/afecta", methods=["POST"])
 @login_required
 def afectar_reporte(id):
-
     reporte = db.session.get(Reporte, id) or abort(404)
+
+    # NUEVO: Si el usuario que creó el reporte es el mismo que está logueado, lo bloqueamos
+    if reporte.usuario_id == current_user.id:
+        flash("Este es tu propio reporte, ya sabemos que te afecta.", "error")
+        return redirect(url_for("mapa"))
 
     ya_afectado = Afectacion.query.filter_by(
         reporte_id=id,
@@ -591,35 +596,21 @@ def afectar_reporte(id):
     ).first()
 
     if ya_afectado:
-        flash(
-            "Ya indicaste que este reporte te afecta.",
-            "error"
-        )
-
+        flash("Ya indicaste que este reporte te afecta.", "error")
     else:
         nueva_afectacion = Afectacion(
             reporte_id=reporte.id,
             usuario_id=current_user.id
         )
-
         db.session.add(nueva_afectacion)
-
         try:
             db.session.commit()
-            flash(
-                "Tu participación fue registrada correctamente.",
-                "ok"
-            )
-
+            flash("Tu participación fue registrada correctamente.", "ok")
         except Exception:
             db.session.rollback()
-            flash(
-                "No se pudo registrar tu participación.",
-                "error"
-            )
+            flash("No se pudo registrar tu participación.", "error")
 
     return redirect(url_for("mapa"))
-
 
 # ---------- CONTROL DE ARCHIVOS GRANDES ----------
 @app.errorhandler(413)
